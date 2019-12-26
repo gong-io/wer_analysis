@@ -1,3 +1,19 @@
+from IPython.core.display import display, HTML
+import numpy as np
+import pandas as pd
+import json
+from zipfile import ZipFile
+import Levenshtein
+import string
+
+
+
+# from nlp.punctuation.src.utils.strip_punctuations import extract_punctuation_marks
+# from nlp.punctuation.src.utils.capitalize_text import capitalize_txt
+# import nlp.punctuation.src.data.parse_json as parse_json
+
+
+
 def wrap(txt, cls=None):
     # return txt+' '
     if cls is not None:
@@ -85,10 +101,6 @@ def get_html_of_edits(df):
 
 
 
-
-
-
-import numpy as np
 
 sentence_termination_marks = ['.', '?']
 TH_PAUSE = 1.5
@@ -310,12 +322,6 @@ def group_timed_words_to_sentences(words, additional_data={}, terminate_sentence
 
     return result
 
-import pandas as pd
-import json
-# from nlp.punctuation.src.utils.strip_punctuations import extract_punctuation_marks
-# from nlp.punctuation.src.utils.capitalize_text import capitalize_txt
-# import nlp.punctuation.src.data.parse_json as parse_json
-
 
 class TimedWords:
     def __init__(self):
@@ -340,7 +346,6 @@ class TimedWords:
     def from_json_file(self, filename):
         if '.zip' in filename:
             parts = filename.split('.zip')
-            from zipfile import ZipFile
             with ZipFile(parts[0]+'.zip') as f_zip:
                 with f_zip.open(parts[1][1:], 'r', encoding='utf-8') as f:
                     data = json.load(f)
@@ -493,9 +498,6 @@ class TimedWords:
 
     def set(self, index, key, value):
         self.words[index].set(key, value)
-
-
-import Levenshtein
 
 
 def read_ctm(fname):
@@ -667,8 +669,6 @@ def print_wer(ref_path, hyp_path, norm_func=None, verbose=True):
         # break
     print(f'Total {100 * ttl_dist / ttl_length:.2f}  {ttl_dist} / {ttl_length}')
 
-
-import string
 
 
 def remove_punctuation(text):
