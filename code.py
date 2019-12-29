@@ -1,4 +1,5 @@
 from IPython.core.display import display, HTML
+import re
 import os
 import numpy as np
 import pandas as pd
