@@ -1,4 +1,5 @@
 from IPython.core.display import display, HTML
+import os
 import numpy as np
 import pandas as pd
 import json
@@ -54,7 +55,7 @@ def get_css():
     return result
 
 def print_css():
-    display(HTML(get_css()))
+    return display(HTML(get_css()))
 
 
 def get_html_of_edits(df):
