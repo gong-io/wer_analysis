@@ -6,6 +6,7 @@ import json
 from zipfile import ZipFile
 import string
 from collections import Counter
+import s3fs
 
 from IPython.core.display import display, HTML
 import Levenshtein
