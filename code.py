@@ -728,6 +728,8 @@ def get_edit_df(REF_PATH, HYP_PATH, norm_func=simple_norm, limit=None):
 
 
 def save_to_s3(data, s3_filename, format=None):
+    s3_filename = s3_filename.replace('//', '/')
+
     if format is None:
         format = s3_filename.split('.')[-1]
 
@@ -822,6 +824,7 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output):
 
     filenames = df['filename'].unique()
     df_calls_metadata = get_calls_metadata(filenames)
+    df_calls_metadata['gong_link'] = [f'https://app.gong.io/call?id={call_id}' for call_id in df_calls_metadata['call_id']]
     df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_in_company'] + df_calls_metadata['speaker_count_outside_company'] + df_calls_metadata['speaker_count_company_unknown']
     df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_total'].fillna(0)
 
