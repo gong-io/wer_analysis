@@ -752,7 +752,7 @@ def save_to_s3(data, s3_filename, format=None):
     return data
 
 def save_transcript_compare_html_to_s3(df, s3_filename):
-    save_to_s3((get_css() + get_html_of_edits(_)), s3_filename)
+    save_to_s3((get_css() + get_html_of_edits(df)), s3_filename)
 
 
 def display_transcript_compare_html(df):
@@ -830,21 +830,21 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output):
     wer_by_conferencing_provider = wer_by_filename_with_metadata.groupby('conferencing_provider')['wer'].mean()
     save_to_s3( wer_by_conferencing_provider, s3_filename=folder_output+'/wer_by_conferencing_provider.tsv')
 
-    wer_by_field = lambda x: wer_by_filename_with_metadata.groupby(x)['wer'].describe().sort_values('mean').T
+    wer_by_field = lambda x: wer_by_filename_with_metadata.groupby(x)['wer'].describe().sort_values('mean')
 
-    print('=== WER by language: ===')
+    print('\n=== WER by language: ===')
     print( wer_by_field('language') )
 
-    print('=== WER by internal_meeting: ===')
+    print('\n=== WER by internal_meeting: ===')
     print( wer_by_field('internal_meeting') )
 
-    print('=== WER by direction: ===')
+    print('\n=== WER by direction: ===')
     print( wer_by_field('direction') )
 
-    print('=== WER by owner_name: ===')
+    print('\n=== WER by owner_name: ===')
     print( wer_by_field('owner_name') )
 
-    print('=== WER by speaker_count_total: ===')
+    print('\n=== WER by speaker_count_total: ===')
     print( wer_by_field('speaker_count_total') )
 
 
