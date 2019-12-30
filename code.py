@@ -794,6 +794,9 @@ def get_calls_metadata(filenames):
     WHERE 
     call_id IN ({})
     """.format(','.join(filenames))
+
+    print(athena_query)
+
     df_calls_metadata = pd.read_sql(athena_query, conn)
     return df_calls_metadata
 
