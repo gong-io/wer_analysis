@@ -7,6 +7,7 @@ from zipfile import ZipFile
 import string
 from collections import Counter
 import s3fs
+from pyathena import connect
 
 from IPython.core.display import display, HTML
 import Levenshtein
@@ -724,14 +725,26 @@ def get_edit_df(REF_PATH, HYP_PATH, norm_func=simple_norm, limit=None):
     return df
 
 
-def save_to_s3(data, s3_filename):
+def save_to_s3(data, s3_filename, format=None):
+    if format is None:
+        format = s3_filename.split('.')[-1]
+
     if isinstance(data, pd.DataFrame):
-        data = data.to_html()
+        if format=='csv':
+            data = data.to_csv()
+        elif format == 'tsv':
+            data = data.to_csv(sep='\t')
+        elif format=='json':
+            data = data.T.to_json()
+        elif format=='html':
+            data = data.to_html()
+        else:
+            data = data.to_html()
 
     s3 = s3fs.S3FileSystem(anon=False)
     with s3.open(s3_filename, 'wb') as f:
         f.write(data.encode())
-
+    return data
 
 def save_transcript_compare_html_to_s3(df, s3_filename):
     save_to_s3((get_css() + get_html_of_edits(_)), s3_filename)
@@ -759,3 +772,77 @@ def get_top_errors(df, groupby=['text_reference', 'text_hypothesis']):
     # Get the most common errors
     return df.query('edit_tag!="equal"').reset_index().groupby(groupby)['index'].count().sort_values(
         ascending=False).reset_index()
+
+
+def copy_s3_folder_to_local_folder(s3_folder, local_folder):
+    os.makedirs(local_folder, exist_ok=True)
+    os.remove(local_folder+'/*')
+    os.system('aws s3 cp {s3_folder} {local_folder} --recursive')
+
+def install_required_packages():
+    os.system('!pip install PyAthena python-Levenshtein')
+
+def enrich_calls_with_metadata(filenames):
+    conn = connect(s3_staging_dir='s3://gong-transcripts-aws-glue/notebook-temp/bla',
+                   region_name='us-east-1')
+    athena_query = """
+    SELECT *
+    FROM awsdatacatalog.research.bi_call_facts
+    WHERE 
+    call_id IN ({})
+    """.format(','.join(filenames))
+    df_calls_metadata = pd.read_sql(athena_query, conn)
+    return df_calls_metadata
+
+
+def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output):
+    copy_s3_folder_to_local_folder(folder_truth, './data/truth')
+    copy_s3_folder_to_local_folder(folder_hypothesis, './data/hypothesis')
+
+    REF_PATH = './data/truth'
+    HYP_PATH = './data/hypothesis'
+    df = get_edit_df(REF_PATH, HYP_PATH, norm_func=simple_norm, limit=None)
+    df['filename'] = df['filename'].astype(int)
+    df['speaker_count_total'] = df['speaker_count_in_company'] + df['speaker_count_outside_company'] + df['speaker_count_company_unknown']
+    print('Found {df.shape[0]} differences in {df["filename"].nunique()} files.')
+
+    filenames = df['filename'].unique()
+    enrich_calls_with_metadata(filenames)
+    wer_by_filename_with_metadata = pd.merge(left=df_calls_metadata, right=get_pivot_table_of_edits(df), left_on='call_id', right_on='filename')
+    save_to_s3( wer_by_filename_with_metadata, s3_filename=folder_output+'/wer_by_filename_with_metadata.csv', format='csv')
+
+    wer_by_company = wer_by_filename_with_metadata.groupby('company_name')['wer'].mean()
+    save_to_s3( wer_by_company, s3_filename=folder_output+'/wer_by_company.csv', format='csv')
+
+    wer_by_conferencing_provider = wer_by_filename_with_metadata.groupby('conferencing_provider')['wer'].mean()
+    save_to_s3( wer_by_conferencing_provider, s3_filename=folder_output+'/wer_by_conferencing_provider.tsv')
+
+    wer_by_field = lambda x: wer_by_filename_with_metadata.groupby(x)['wer'].describe().sort_values('mean').T
+
+    print('=== WER by language: ===')
+    print( wer_by_field('language') )
+
+    print('=== WER by internal_meeting: ===')
+    print( wer_by_field('internal_meeting') )
+
+    print('=== WER by direction: ===')
+    print( wer_by_field('direction') )
+
+    print('=== WER by owner_name: ===')
+    print( wer_by_field('owner_name') )
+
+    print('=== WER by speaker_count_total: ===')
+    print( wer_by_field('speaker_count_total') )
+
+
+    # Save HTML of edits
+    for filename in df['filename'].unique():
+        save_transcript_compare_html_to_s3(df[df.filename == filename], s3_filename=folder_output+'edits_{filename}.html')
+
+    average_wer = get_pivot_table_of_edits(df, groupby=['filename'])['wer'].mean()
+    print('Average WER is {average_wer}')
+
+    # Top edits
+    save_to_s3(get_top_errors(df), s3_filename=folder_output + '/top_errors.tsv')
+    # Top errors
+    save_to_s3( get_top_errors(df, groupby=['text_reference']), s3_filename=folder_output+'/top_errors.tsv' )
