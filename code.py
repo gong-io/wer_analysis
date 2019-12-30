@@ -779,13 +779,17 @@ def get_top_errors(df, groupby=['text_reference', 'text_hypothesis']):
 def copy_s3_folder_to_local_folder(s3_folder, local_folder):
     shutil.rmtree(local_folder)
     os.makedirs(local_folder, exist_ok=True)
-    os.system('aws s3 cp {s3_folder} {local_folder} --recursive')
+    print(f'aws s3 cp {s3_folder} {local_folder} --recursive')
+    os.system(f'aws s3 cp {s3_folder} {local_folder} --recursive')
 
 def install_required_packages():
     output = subprocess.check_output("pip install PyAthena python-Levenshtein", shell=True)
     return output.decode()
 
 def get_calls_metadata(filenames):
+    if len(filenames)==0:
+        raise ValueError('Please pass valid call IDs')
+
     conn = connect(s3_staging_dir='s3://gong-transcripts-aws-glue/notebook-temp/bla',
                    region_name='us-east-1')
     athena_query = """
@@ -794,9 +798,6 @@ def get_calls_metadata(filenames):
     WHERE 
     call_id IN ({})
     """.format(','.join(filenames))
-
-    print(athena_query)
-
     df_calls_metadata = pd.read_sql(athena_query, conn)
     return df_calls_metadata
 
@@ -809,7 +810,7 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output):
     HYP_PATH = './data/hypothesis'
     df = get_edit_df(REF_PATH, HYP_PATH, norm_func=simple_norm, limit=None)
     df['filename'] = df['filename'].astype(int)
-    print('Found {df.shape[0]} differences in {df["filename"].nunique()} files.')
+    print(f'Found {df.shape[0]} differences in {df["filename"].nunique()} files.')
 
     filenames = df['filename'].unique()
     df_calls_metadata = get_calls_metadata(filenames)
@@ -847,7 +848,7 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output):
         save_transcript_compare_html_to_s3(df[df.filename == filename], s3_filename=folder_output+'edits_{filename}.html')
 
     average_wer = get_pivot_table_of_edits(df, groupby=['filename'])['wer'].mean()
-    print('Average WER is {average_wer}')
+    print(f'Average WER is {average_wer}')
 
     # Top edits
     save_to_s3(get_top_errors(df), s3_filename=folder_output + '/top_errors.tsv')
