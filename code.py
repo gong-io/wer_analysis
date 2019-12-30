@@ -728,7 +728,7 @@ def get_edit_df(REF_PATH, HYP_PATH, norm_func=simple_norm, limit=None):
 
 
 def save_to_s3(data, s3_filename, format=None):
-    s3_filename = s3_filename.replace('//', '/')
+    s3_filename = s3_filename.replace('//', '/').replace('s3:/', 's3://')
 
     if format is None:
         format = s3_filename.split('.')[-1]
