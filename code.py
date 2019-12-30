@@ -1,3 +1,5 @@
+import subprocess
+import shutil
 import re
 import os
 import numpy as np
@@ -775,12 +777,13 @@ def get_top_errors(df, groupby=['text_reference', 'text_hypothesis']):
 
 
 def copy_s3_folder_to_local_folder(s3_folder, local_folder):
+    shutil.rmtree(local_folder)
     os.makedirs(local_folder, exist_ok=True)
-    os.remove(local_folder+'/*')
     os.system('aws s3 cp {s3_folder} {local_folder} --recursive')
 
 def install_required_packages():
-    os.system('!pip install PyAthena python-Levenshtein')
+    output = subprocess.check_output("pip install PyAthena python-Levenshtein", shell=True)
+    return output.decode()
 
 def enrich_calls_with_metadata(filenames):
     conn = connect(s3_staging_dir='s3://gong-transcripts-aws-glue/notebook-temp/bla',
