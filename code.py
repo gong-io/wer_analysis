@@ -785,7 +785,7 @@ def install_required_packages():
     output = subprocess.check_output("pip install PyAthena python-Levenshtein", shell=True)
     return output.decode()
 
-def enrich_calls_with_metadata(filenames):
+def get_calls_metadata(filenames):
     conn = connect(s3_staging_dir='s3://gong-transcripts-aws-glue/notebook-temp/bla',
                    region_name='us-east-1')
     athena_query = """
@@ -806,11 +806,12 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output):
     HYP_PATH = './data/hypothesis'
     df = get_edit_df(REF_PATH, HYP_PATH, norm_func=simple_norm, limit=None)
     df['filename'] = df['filename'].astype(int)
-    df['speaker_count_total'] = df['speaker_count_in_company'] + df['speaker_count_outside_company'] + df['speaker_count_company_unknown']
     print('Found {df.shape[0]} differences in {df["filename"].nunique()} files.')
 
     filenames = df['filename'].unique()
-    enrich_calls_with_metadata(filenames)
+    df_calls_metadata = get_calls_metadata(filenames)
+    df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_in_company'] + df_calls_metadata['speaker_count_outside_company'] + df_calls_metadata['speaker_count_company_unknown']
+
     wer_by_filename_with_metadata = pd.merge(left=df_calls_metadata, right=get_pivot_table_of_edits(df), left_on='call_id', right_on='filename')
     save_to_s3( wer_by_filename_with_metadata, s3_filename=folder_output+'/wer_by_filename_with_metadata.csv', format='csv')
 
