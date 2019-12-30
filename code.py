@@ -731,6 +731,9 @@ def save_to_s3(data, s3_filename, format=None):
     if format is None:
         format = s3_filename.split('.')[-1]
 
+    if isinstance(data, pd.Series):
+        data = pd.DataFrame(data)
+
     if isinstance(data, pd.DataFrame):
         if format=='csv':
             data = data.to_csv()
@@ -779,7 +782,6 @@ def get_top_errors(df, groupby=['text_reference', 'text_hypothesis']):
 def copy_s3_folder_to_local_folder(s3_folder, local_folder):
     shutil.rmtree(local_folder)
     os.makedirs(local_folder, exist_ok=True)
-    print(f'aws s3 cp {s3_folder} {local_folder} --recursive')
     os.system(f'aws s3 cp {s3_folder} {local_folder} --recursive')
 
 def install_required_packages():
@@ -803,9 +805,12 @@ def get_calls_metadata(filenames):
 
 
 def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output):
+    print('Copying truth files...')
     copy_s3_folder_to_local_folder(folder_truth, './data/truth')
+    print('Copying hypothesis files...')
     copy_s3_folder_to_local_folder(folder_hypothesis, './data/hypothesis')
 
+    print('Computing transcription differences...')
     REF_PATH = './data/truth'
     HYP_PATH = './data/hypothesis'
     df = get_edit_df(REF_PATH, HYP_PATH, norm_func=simple_norm, limit=None)
@@ -817,10 +822,10 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output):
     df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_in_company'] + df_calls_metadata['speaker_count_outside_company'] + df_calls_metadata['speaker_count_company_unknown']
 
     wer_by_filename_with_metadata = pd.merge(left=df_calls_metadata, right=get_pivot_table_of_edits(df), left_on='call_id', right_on='filename')
-    save_to_s3( wer_by_filename_with_metadata, s3_filename=folder_output+'/wer_by_filename_with_metadata.csv', format='csv')
+    save_to_s3( wer_by_filename_with_metadata, s3_filename=folder_output+'/wer_by_filename_with_metadata.csv')
 
     wer_by_company = wer_by_filename_with_metadata.groupby('company_name')['wer'].mean()
-    save_to_s3( wer_by_company, s3_filename=folder_output+'/wer_by_company.csv', format='csv')
+    save_to_s3( wer_by_company, s3_filename=folder_output+'/wer_by_company.csv')
 
     wer_by_conferencing_provider = wer_by_filename_with_metadata.groupby('conferencing_provider')['wer'].mean()
     save_to_s3( wer_by_conferencing_provider, s3_filename=folder_output+'/wer_by_conferencing_provider.tsv')
