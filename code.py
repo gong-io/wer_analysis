@@ -817,11 +817,14 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output):
     df['filename'] = df['filename'].astype(int)
     print(f'Found {df.shape[0]} differences in {df["filename"].nunique()} files.')
 
+    average_wer = get_pivot_table_of_edits(df, groupby=['filename'])['wer'].mean()
+    print(f'Average WER is {average_wer}')
+
     filenames = df['filename'].unique()
     df_calls_metadata = get_calls_metadata(filenames)
     df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_in_company'] + df_calls_metadata['speaker_count_outside_company'] + df_calls_metadata['speaker_count_company_unknown']
 
-    wer_by_filename_with_metadata = pd.merge(left=df_calls_metadata, right=get_pivot_table_of_edits(df), left_on='call_id', right_on='filename')
+    wer_by_filename_with_metadata = pd.merge(left=get_pivot_table_of_edits(df), right=df_calls_metadata, left_on='filename', right_on='call_id')
     save_to_s3( wer_by_filename_with_metadata, s3_filename=folder_output+'/wer_by_filename_with_metadata.csv')
 
     wer_by_company = wer_by_filename_with_metadata.groupby('company_name')['wer'].mean()
@@ -847,15 +850,17 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output):
     print('\n=== WER by speaker_count_total: ===')
     print( wer_by_field('speaker_count_total') )
 
-
+    print('Saving HTML of transcription differences...')
     # Save HTML of edits
     for filename in df['filename'].unique():
-        save_transcript_compare_html_to_s3(df[df.filename == filename], s3_filename=folder_output+'edits_{filename}.html')
-
-    average_wer = get_pivot_table_of_edits(df, groupby=['filename'])['wer'].mean()
-    print(f'Average WER is {average_wer}')
+        save_transcript_compare_html_to_s3(df[df.filename == filename], s3_filename=folder_output+f'/edits_{filename}.html')
 
     # Top edits
-    save_to_s3(get_top_errors(df), s3_filename=folder_output + '/top_errors.tsv')
+    save_to_s3(get_top_errors(df), s3_filename=folder_output + '/top_edits.tsv')
     # Top errors
     save_to_s3( get_top_errors(df, groupby=['text_reference']), s3_filename=folder_output+'/top_errors.tsv' )
+
+    transcription_edits_with_metadata = pd.merge(left=df, right=df_calls_metadata, left_on='filename', right_on='call_id')
+    save_to_s3( transcription_edits_with_metadata, s3_filename=folder_output+'/transcription_edits_with_metadata.csv')
+
+    return transcription_edits_with_metadata
