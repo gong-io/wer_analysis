@@ -797,7 +797,7 @@ def get_calls_metadata(filenames):
     FROM awsdatacatalog.research.bi_call_facts
     WHERE 
     call_id IN ({})
-    """.format(','.join(filenames))
+    """.format(','.join([str(c) for c in filenames]))
     df_calls_metadata = pd.read_sql(athena_query, conn)
     return df_calls_metadata
 
