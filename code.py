@@ -857,7 +857,7 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output):
     print('Saving HTML of transcription differences...')
     # Save HTML of edits
     for filename in df['filename'].unique():
-        save_transcript_compare_html_to_s3(df[df.filename == filename], s3_filename=folder_output+f'/edits_{filename}.html')
+        save_transcript_compare_html_to_s3(df[df.filename == filename], s3_filename=folder_output+f'/transcription_edits_{filename}.html')
 
     # Top edits
     save_to_s3(get_top_errors(df), s3_filename=folder_output + '/top_edits.tsv')
