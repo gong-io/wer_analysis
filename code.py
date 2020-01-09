@@ -20,12 +20,12 @@ import Levenshtein
 # import nlp.punctuation.src.data.parse_json as parse_json
 
 
-
 def wrap(txt, cls=None):
     # return txt+' '
     if cls is not None:
         return '<span class="{cls}" title="{cls}">{txt}</span>'.format(cls=cls, txt=txt)
     return txt
+
 
 def get_css():
     result = """
@@ -60,6 +60,7 @@ def get_css():
         """
     return result
 
+
 def print_css():
     return display(HTML(get_css()))
 
@@ -81,36 +82,9 @@ def get_html_of_edits(df):
     return s_joined
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 sentence_termination_marks = ['.', '?']
 TH_PAUSE = 1.5
+
 
 def parse_monologues_to_word_dicts(monologues):
     result = []
@@ -123,9 +97,9 @@ def parse_monologues_to_word_dicts(monologues):
             extra_data['speaker_name'] = monologue['speaker'].get('name')
 
         if 'terms' in monologue:
-            for i,word in enumerate(monologue['terms']):
-                if word.get('type', 'PUNCTUATION')=='PUNCTUATION':
-                    if i>0 and len(result)>0:
+            for i, word in enumerate(monologue['terms']):
+                if word.get('type', 'PUNCTUATION') == 'PUNCTUATION':
+                    if i > 0 and len(result) > 0:
                         result[-1]['punctuation'] = word['text']
                         continue
                     else:
@@ -147,8 +121,8 @@ def parse_monologues_to_word_dicts(monologues):
                     'text':         word['t'],
                     'type':         word.get('i', 'word')
                 }
-                if word.get('type', '')=='P':
-                    if i>0 and len(result)>0:
+                if word.get('type', '') == 'P':
+                    if i > 0 and len(result) > 0:
                         result[-1]['punctuation'] = word['text']
                         continue
                     else:
@@ -159,6 +133,7 @@ def parse_monologues_to_word_dicts(monologues):
 
     return result
 
+
 def terminate_sentence_func_sentence_termination_marks(word, sentence):
     result = \
         word['text'] in sentence_termination_marks \
@@ -168,6 +143,7 @@ def terminate_sentence_func_sentence_termination_marks(word, sentence):
 
     return result
 
+
 def terminate_sentence_func_sentence_termination_marks_in_punctuation_field(word, sentence):
     result = \
         word['punctuation'] in sentence_termination_marks \
@@ -175,6 +151,7 @@ def terminate_sentence_func_sentence_termination_marks_in_punctuation_field(word
         or word['paragraph_change']
 
     return result
+
 
 def terminate_sentence_func_pause(word, sentence):
     result = \
@@ -184,19 +161,20 @@ def terminate_sentence_func_pause(word, sentence):
 
     return result
 
+
 def enrich_words_json(words):
     L = len(words)-1
 
-    for i,word in enumerate(words):
+    for i, word in enumerate(words):
         # Pause
-        if i<L:
+        if i < L:
             word['pause'] = float(words[i+1]['start']) - float(word['end'])
         else:
             word['pause'] = np.nan
 
         # Speaker change
-        if i<L:
-            word['speaker_change'] = ( words[i+1].get('speaker_id',0) != word.get('speaker_id',0) )
+        if i < L:
+            word['speaker_change'] = (words[i+1].get('speaker_id', 0) != word.get('speaker_id', 0))
         else:
             word['speaker_change'] = True
 
@@ -209,16 +187,19 @@ def enrich_words_json(words):
 
     return words
 
+
 def enrich_sentences_dict(sentences):
     for sentence in sentences:
-        if sentence['duration']>0:
+        if sentence['duration'] > 0:
             sentence['chars_per_second'] = len(sentence['text']) / sentence['duration']
         else:
             sentence['chars_per_second'] = np.nan
     return sentences
 
+
 def calc_words_stats(words, k, func):
     return func([word[k] for word in words])
+
 
 def group_timed_words_to_sentences(words, additional_data={}, terminate_sentence_func=None, return_words=False):
     """
@@ -248,13 +229,13 @@ def group_timed_words_to_sentences(words, additional_data={}, terminate_sentence
     # sentence_total_inner_pause = 0
     sentence_words = []
     sentence_id = 0
-    sentence_start_id = 0 # Number of word that starts the sentence
+    sentence_start_id = 0  # Number of word that starts the sentence
 
     if terminate_sentence_func is None:
         terminate_sentence_func = terminate_sentence_func_sentence_termination_marks
 
     for ind, word in enumerate(words):
-        if len(word['text'])==0:
+        if len(word['text']) == 0:
             continue
 
         # Ignore comments in text (e.g. "[inaudible]" )
@@ -267,7 +248,7 @@ def group_timed_words_to_sentences(words, additional_data={}, terminate_sentence
             sentence_start_id = ind
 
         text += word['text'] + word.get('punctuation', ' ')
-        if text[-1]!=' ':
+        if text[-1] != ' ':
             text += ' '
 
         if word['text'] in sentence_termination_marks:
@@ -306,7 +287,6 @@ def group_timed_words_to_sentences(words, additional_data={}, terminate_sentence
                 'speaker_id': word.get('speaker_id', '')
             }
 
-
             if return_words:
                 sentence_data['words'] = sentence_words
 
@@ -318,7 +298,7 @@ def group_timed_words_to_sentences(words, additional_data={}, terminate_sentence
             # sentence_total_inner_pause = 0
             sentence_words = []
             is_last_word_in_sentence = False
-            is_first_word_in_sentence = True # Next word will be the first in sentence
+            is_first_word_in_sentence = True  # Next word will be the first in sentence
         else:
             is_first_word_in_sentence = False
 
@@ -486,9 +466,8 @@ class TimedWords:
             return num_word
         return None
 
-
         # TODO: Write function (currently it's not working)
-        text_list = text.strip().split() #.lower()
+        text_list = text.strip().split()  # .lower()
         current_counter = 0
         for word_ind, word in enumerate(self.words):
             ind = word_ind
@@ -526,7 +505,7 @@ def read_file(fname):
     elif fname.endswith('.txt'):
         func = read_text
     elif fname.endswith('.json'):
-        func = lambda x: TimedWords().from_json_file(x).get_text(capitalize_text=False)
+        func =  lambda x: TimedWords().from_json_file(x).get_text(capitalize_text=False)
         # from gong_utils.transcript_reader import TranscriptReader
         # func = lambda x: TranscriptReader(x).get_text()
     else:
@@ -588,94 +567,108 @@ def to_hms(seconds):
     return str(datetime.timedelta(seconds=float(seconds)))[:-4]
 
 
+def get_edit_distance(ref_lst, hyp_lst):
+    alphabet = set(ref_lst + hyp_lst)
+    word2char = {k: chr(i) for i, k in enumerate(alphabet)}
+    enc_ref = ''.join([word2char[w] for w in ref_lst])
+    enc_hyp = ''.join([word2char[w] for w in hyp_lst])
+    return Levenshtein.distance(enc_ref, enc_hyp), len(ref_lst)
+
+
 def get_edit_distance_verbosely(ref_lst, hyp_lst):
     alphabet = set(ref_lst + hyp_lst)
     word2char = {k: chr(i) for i, k in enumerate(alphabet)}
-    char2word = {v: k for k, v in word2char.items()}
 
     enc_ref = ''.join([word2char[w] for w in ref_lst])
     enc_hyp = ''.join([word2char[w] for w in hyp_lst])
 
-    printout = ''
-    compare = []
     wer = Counter()
-    prev_res = 'None', 0, 0, 0, 0
-    opcodes = []
-    for tag, i1, i2, j1, j2 in Levenshtein.opcodes(enc_ref, enc_hyp):
-        if tag == 'replace' and prev_res[0] in ['insert', 'delete']:
-            prev_res = opcodes.pop()
-            opcodes.append((tag, prev_res[1], i2, prev_res[3], j2))
-        else:
-            opcodes.append((tag, i1, i2, j1, j2))
-        prev_res = tag, i1, i2, j1, j2
-
+    opcodes = Levenshtein.opcodes(enc_ref, enc_hyp)
     for tag, i1, i2, j1, j2 in opcodes:
-        words_ref = ' '.join([char2word[x] for x in enc_ref[i1:i2]])
-        words_rcg = ' '.join([char2word[x] for x in enc_hyp[j1:j2]])
-        if tag == 'replace':
-            match = True
-            for ltag, li1, li2, lj1, lj2 in Levenshtein.opcodes(words_ref, words_rcg):
-                if ltag == 'equal' or \
-                        (ltag in ['delete', 'insert'] and
-                         ((words_ref[li1:li2] or words_rcg[lj1:lj2]) in ['s', 'ed', 'd', ' '])):
-                    # TODO: Shouldn't we still log these? and give them a low EWER score?
-                    continue
-                match = False
+        wer.update({tag: i2-i1 or j2-j1})
 
-            if match:
-                weight = i2 - i1
-                tag = 'equal'
-                comments = ''
-                wer.update({'equal': i2 - i1})
-                printout += (f'{i1:5d}:{"equal":8s} {words_ref} === {words_rcg}')
-                compare.append((i1, tag, words_ref, words_rcg, weight, comments))
-                continue
-            else:
-                pass
-                printout += (f'{i1:5d}:{tag:8s} {words_ref} <> {words_rcg}')
-                comments = ''
-                # compare.append((i1, tag, words_ref, words_rcg, ''))
-
-        elif tag in ['delete', 'insert'] and ((words_ref or words_rcg) in [
-            'in', 'it', 'its', 'of', 'to', 'okay', 'a', 'the', 'and', 'for', 'so', 'yeah', 'yep', 'yes', 'yup'
-        ]):
-            pass
-            printout += (f'{i1:5d}:{tag:8s} {words_ref or "<<=== " + words_rcg}{" ===--" if not words_rcg else ""}')
-            comments = '<<==='
-            # compare.append((i1, tag, words_ref, words_rcg, '<<==='))
-
-        else:
-            pass
-            printout += (f'{i1:5d}:{tag:8s} {words_ref or "<< " + words_rcg}{" --" if not words_rcg else ""}')
-            comments = '<<'
-            # compare.append((i1, tag, words_ref, words_rcg, '<<'))
-
-        weight = i2 - i1 or j2 - j1
-        compare.append((i1, tag, words_ref, words_rcg, weight, comments))
-        wer.update({tag: i2 - i1 or j2 - j1})
-
+    # print(wer)
     nom = wer["insert"] + wer["delete"] + wer["replace"]
-    den = wer["equal"] + wer["delete"] + wer["replace"] - 1
+    den = wer["equal"] + wer["delete"] + wer["replace"] 
 
-    return nom, den, printout, compare
+    return nom, den, opcodes
 
 
-def print_wer(ref_path, hyp_path, norm_func=None, verbose=True):
-    ttl_dist, ttl_length = 0, 0
-    for fn, ref_lst, hyp_lst in generate_file_contents(ref_path, hyp_path, norm_func):
-        if verbose:
-            dist, length, printout, compare = get_edit_distance_verbosely(ref_lst, hyp_lst)
+class Err_Stat:
+    def __init__(self, ins, sub, del_, total):
+        self.ins_num = ins
+        self.sub_num = sub
+        self.del_num = del_
+        self.total_cost = total
+        self.tag = []
+
+    def __repr__(self):
+        return (f'[{self.total_cost} {self.ins_num} ins, {self.del_num} del, {self.sub_num} sub] {self.tag}')
+
+
+def get_edit_distance_kaldi(ref_lst, hyp_lst):
+    alphabet = set(ref_lst + hyp_lst)
+    word2char = {k: chr(i) for i, k in enumerate(alphabet)}
+    ref = ''.join([word2char[w] for w in ref_lst])
+    hyp = ''.join([word2char[w] for w in hyp_lst])
+
+    e, cur_e = [], []
+    for i in range(len(ref) + 1):
+        e.append(Err_Stat(0, 0, i, i))
+        cur_e.append(Err_Stat(0, 0, i, i))
+
+    # // for other alignments
+    for hyp_index in range(1, len(hyp) + 1):
+        # cur_e[0] = copy.deepcopy(e[0])
+        cur_e[0].ins_num += 1
+        cur_e[0].total_cost += 1
+
+        for ref_index in range(1, len(ref) + 1):
+            ins_err = e[ref_index].total_cost + 1
+            del_err = cur_e[ref_index - 1].total_cost + 1
+            sub_err = e[ref_index - 1].total_cost
+            if hyp[hyp_index - 1] != ref[ref_index - 1]:
+                sub_err += 1
+            else:
+                e[ref_index - 1].tag.append(('equal', ref_index - 1, ref_index, hyp_index - 1, hyp_index))
+
+            if sub_err < ins_err and sub_err < del_err:
+                cur_e[ref_index] = copy.deepcopy(e[ref_index - 1])
+                if hyp[hyp_index - 1] != ref[ref_index - 1]:
+                    cur_e[ref_index].sub_num += 1  # // substitution error should be increased
+                    cur_e[ref_index].tag.append(('replace', ref_index - 1, ref_index, hyp_index - 1, hyp_index))
+                cur_e[ref_index].total_cost = sub_err
+            elif del_err < ins_err:
+                cur_e[ref_index] = copy.deepcopy(cur_e[ref_index - 1])
+                cur_e[ref_index].total_cost = del_err
+                cur_e[ref_index].del_num += 1  # // deletion number is increased.
+                cur_e[ref_index].tag.append(('delete', ref_index - 1, ref_index, hyp_index - 1, hyp_index - 1))
+            else:
+                cur_e[ref_index] = copy.deepcopy(e[ref_index])
+                cur_e[ref_index].total_cost = ins_err
+                cur_e[ref_index].ins_num += 1  # // insertion number is increased.
+                cur_e[ref_index].tag.append(('insert', ref_index - 1, ref_index - 1, hyp_index - 1, hyp_index))
+        e = copy.deepcopy(cur_e)  # // alternate for the next recursion.
+
+    # join similar entries
+    ops = [e[-1].tag[0]]
+    for el in e[-1].tag[1:]:
+        if el[0] == ops[-1][0]:
+            ops[-1] = (el[0], ops[-1][1], el[2], ops[-1][3], el[4])
         else:
-            pass
-            # dist, length = get_edit_distance(ref_lst, hyp_lst)
+            ops.append(el)
 
-        print(f'{fn:25} {100 * dist / length:.2f}   {dist} / {length}')
+    return e[-1].total_cost, len(ref_lst), ops
 
-        ttl_dist += dist
-        ttl_length += length
-        # break
-    print(f'Total {100 * ttl_dist / ttl_length:.2f}  {ttl_dist} / {ttl_length}')
 
+def ops2str(ref_lst, hyp_lst, ops):
+    printout = ''
+    for tag, i1, i2, j1, j2 in ops:
+        if tag == 'replace':
+            printout += f'{tag:8s} {" ".join(ref_lst[i1:i2])} <> {" ".join(hyp_lst[j1:j2])} \t{(i1, i2), (j1, j2)}\n'
+        else:
+            printout += f'{tag:8s} {" ".join(ref_lst[i1:i2]) or "<< " + " ".join(hyp_lst[j1:j2])} \t{(i1, i2), (j1, j2)}\n'
+    return printout
 
 
 def remove_punctuation(text):
@@ -718,12 +711,13 @@ def generate_file_contents(ref_path, hyp_path, norm_func, limit=None):
 def get_edit_df(REF_PATH, HYP_PATH, norm_func=simple_norm, limit=None):
     full_compare = []
     for fn, ref_lst, hyp_lst in generate_file_contents(REF_PATH, HYP_PATH, norm_func, limit):
-        dist, length, printout, compare = get_edit_distance_verbosely(ref_lst, hyp_lst)
-        full_compare.extend([[fn] + list(x) for x in compare])
+        dist, length, ops = get_edit_distance_verbosely(ref_lst, hyp_lst)
+
+        full_compare.extend([ [fn, ' '.join(ref_lst[x[1]:x[2]]), ' '.join(hyp_lst[x[3]:x[4]]), *x]  for x in ops])
 
     df = pd.DataFrame(full_compare,
-                      columns=['filename', 'word_start_index', 'edit_tag', 'text_reference', 'text_hypothesis',
-                               'weight', 'comments'])
+                      columns=['filename', 'text_reference', 'text_hypothesis', 'edit_tag',
+                               'text_reference_beg', 'text_reference_end','text_hypothesis_beg','text_hypothesis_end'])
     return df
 
 
@@ -737,13 +731,13 @@ def save_to_s3(data, s3_filename, format=None):
         data = pd.DataFrame(data)
 
     if isinstance(data, pd.DataFrame):
-        if format=='csv':
+        if format == 'csv':
             data = data.to_csv()
         elif format == 'tsv':
             data = data.to_csv(sep='\t')
-        elif format=='json':
+        elif format == 'json':
             data = data.T.to_json()
-        elif format=='html':
+        elif format == 'html':
             data = data.to_html()
         else:
             data = data.to_html()
@@ -752,6 +746,7 @@ def save_to_s3(data, s3_filename, format=None):
     with s3.open(s3_filename, 'wb') as f:
         f.write(data.encode())
     return data
+
 
 def save_transcript_compare_html_to_s3(df, s3_filename):
     save_to_s3((get_css() + get_html_of_edits(df)), s3_filename)
@@ -766,11 +761,10 @@ def get_pivot_table_of_edits(df, groupby=['filename']):
     # filenames = [z for z in _.index.levels[0]]
     # Create a pivot table of edit tags by filename
     df_edit_counts = _.reset_index().pivot_table(values='weight', index='filename', columns='edit_tag').fillna(0)
-    df_edit_counts['edits'] = df_edit_counts.get('insert', 0) + df_edit_counts.get('delete', 0) + df_edit_counts.get(
-        'replace', 0)
-    df_edit_counts['denominator'] = df_edit_counts.get('equal', 0) + df_edit_counts.get('delete',
-                                                                                        0) + df_edit_counts.get(
-        'replace', 0) - 1
+    df_edit_counts['edits'] = df_edit_counts.get('insert', 0) + df_edit_counts.get('delete', 0) + \
+                              df_edit_counts.get('replace', 0)
+    df_edit_counts['denominator'] = df_edit_counts.get('equal', 0) + df_edit_counts.get('delete',0) + \
+                                    df_edit_counts.get('replace', 0) 
     df_edit_counts['wer'] = df_edit_counts['edits'] / df_edit_counts['denominator'] * 100
     return df_edit_counts
 
@@ -786,12 +780,14 @@ def copy_s3_folder_to_local_folder(s3_folder, local_folder):
     os.makedirs(local_folder, exist_ok=True)
     os.system(f'aws s3 cp {s3_folder} {local_folder} --recursive')
 
+
 def install_required_packages():
     output = subprocess.check_output("pip install PyAthena python-Levenshtein", shell=True)
     return output.decode()
 
+
 def get_calls_metadata(filenames):
-    if len(filenames)==0:
+    if len(filenames) == 0:
         raise ValueError('Please pass valid call IDs')
 
     conn = connect(s3_staging_dir='s3://gong-transcripts-aws-glue/notebook-temp/bla',
@@ -816,7 +812,7 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output):
     REF_PATH = './data/truth'
     HYP_PATH = './data/hypothesis'
     df = get_edit_df(REF_PATH, HYP_PATH, norm_func=simple_norm, limit=None)
-    df['filename'] = df['filename'].astype(int)
+    df['filename'] = df['filename'].astype(int)     # TODO: check if filename is really int !!!
     print(f'Found {df.shape[0]} differences in {df["filename"].nunique()} files.')
 
     average_wer = get_pivot_table_of_edits(df, groupby=['filename'])['wer'].mean()
@@ -825,34 +821,35 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output):
     filenames = df['filename'].unique()
     df_calls_metadata = get_calls_metadata(filenames)
     df_calls_metadata['gong_link'] = [f'https://app.gong.io/call?id={call_id}' for call_id in df_calls_metadata['call_id']]
-    df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_in_company'] + df_calls_metadata['speaker_count_outside_company'] + df_calls_metadata['speaker_count_company_unknown']
+    df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_in_company'] + \
+        df_calls_metadata['speaker_count_outside_company'] + df_calls_metadata['speaker_count_company_unknown']
     df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_total'].fillna(0)
 
     wer_by_filename_with_metadata = pd.merge(left=get_pivot_table_of_edits(df), right=df_calls_metadata, left_on='filename', right_on='call_id')
-    save_to_s3( wer_by_filename_with_metadata, s3_filename=folder_output+'/wer_by_filename_with_metadata.csv')
+    save_to_s3(wer_by_filename_with_metadata, s3_filename=folder_output+'/wer_by_filename_with_metadata.csv')
 
     wer_by_company = wer_by_filename_with_metadata.groupby('company_name')['wer'].mean()
-    save_to_s3( wer_by_company, s3_filename=folder_output+'/wer_by_company.csv')
+    save_to_s3(wer_by_company, s3_filename=folder_output+'/wer_by_company.csv')
 
     wer_by_conferencing_provider = wer_by_filename_with_metadata.groupby('conferencing_provider')['wer'].mean()
-    save_to_s3( wer_by_conferencing_provider, s3_filename=folder_output+'/wer_by_conferencing_provider.tsv')
+    save_to_s3(wer_by_conferencing_provider, s3_filename=folder_output+'/wer_by_conferencing_provider.tsv')
 
-    wer_by_field = lambda x: wer_by_filename_with_metadata.groupby(x)['wer'].describe().sort_values('mean')
+    wer_by_field(x) = lambda x: wer_by_filename_with_metadata.groupby(x)['wer'].describe().sort_values('mean')
 
     print('\n=== WER by language: ===')
-    print( wer_by_field('language') )
+    print(wer_by_field('language'))
 
     print('\n=== WER by internal_meeting: ===')
-    print( wer_by_field('internal_meeting') )
+    print(wer_by_field('internal_meeting'))
 
     print('\n=== WER by direction: ===')
-    print( wer_by_field('direction') )
+    print(wer_by_field('direction'))
 
     print('\n=== WER by owner_name: ===')
-    print( wer_by_field('owner_name') )
+    print(wer_by_field('owner_name'))
 
     print('\n=== WER by speaker_count_total: ===')
-    print( wer_by_field('speaker_count_total') )
+    print(wer_by_field('speaker_count_total'))
 
     print('Saving HTML of transcription differences...')
     # Save HTML of edits
@@ -862,9 +859,9 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output):
     # Top edits
     save_to_s3(get_top_errors(df), s3_filename=folder_output + '/top_edits.tsv')
     # Top errors
-    save_to_s3( get_top_errors(df, groupby=['text_reference']), s3_filename=folder_output+'/top_errors.tsv' )
+    save_to_s3(get_top_errors(df, groupby=['text_reference']), s3_filename=folder_output+'/top_errors.tsv')
 
     transcription_edits_with_metadata = pd.merge(left=df, right=df_calls_metadata, left_on='filename', right_on='call_id')
-    save_to_s3( transcription_edits_with_metadata, s3_filename=folder_output+'/transcription_edits_with_metadata.csv')
+    save_to_s3(transcription_edits_with_metadata, s3_filename=folder_output+'/transcription_edits_with_metadata.csv')
 
     return transcription_edits_with_metadata
