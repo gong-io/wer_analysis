@@ -712,12 +712,12 @@ def get_edit_df(REF_PATH, HYP_PATH, norm_func=simple_norm, limit=None):
     full_compare = []
     for fn, ref_lst, hyp_lst in generate_file_contents(REF_PATH, HYP_PATH, norm_func, limit):
         dist, length, ops = get_edit_distance_verbosely(ref_lst, hyp_lst)
-
-        full_compare.extend([ [fn, ' '.join(ref_lst[x[1]:x[2]]), ' '.join(hyp_lst[x[3]:x[4]]), *x]  for x in ops])
+        full_compare.extend(
+            [[fn, ' '.join(ref_lst[x[1]:x[2]]), ' '.join(hyp_lst[x[3]:x[4]]), x[2]-x[1] or x[4]-x[3], *x] for x in ops])
 
     df = pd.DataFrame(full_compare,
-                      columns=['filename', 'text_reference', 'text_hypothesis', 'edit_tag',
-                               'text_reference_beg', 'text_reference_end','text_hypothesis_beg','text_hypothesis_end'])
+                      columns=['filename', 'text_reference', 'text_hypothesis', 'weight', 'edit_tag',
+                               'text_reference_beg', 'text_reference_end','text_hypothesis_beg', 'text_hypothesis_end'])
     return df
 
 
