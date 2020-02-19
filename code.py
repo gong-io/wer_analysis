@@ -192,7 +192,7 @@ def enrich_words_json(words):
 
     for i,word in enumerate(words):
         # Pause
-        if i<L:
+        if i<L and word.get('start') is not None and word.get('end') is not None:
             word['pause'] = float(words[i+1]['start']) - float(word['end'])
         else:
             word['pause'] = np.nan
