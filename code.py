@@ -816,8 +816,8 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output):
     print(f'Found {df.shape[0]} differences in {df["filename"].nunique()} files.')
     df['common_value'] = 1
 
-    df_edit_counts_edits = get_pivot_table_of_edits(df, groupby=['common_value'])['wer'].mean()
-    print(f'Total WER is {df_edit_counts_edits.wer}')
+    df_edit_counts_edits = get_pivot_table_of_edits(df, groupby=['common_value']).iloc[0]
+    print(f'Total WER is {df_edit_counts_edits.wer} ({df_edit_counts_edits.equal} equal, {df_edit_counts_edits.insert} insert, {df_edit_counts_edits.replace} replace, {df_edit_counts_edits.delete} delete)')
 
     average_wer = get_pivot_table_of_edits(df, groupby=['filename'])['wer'].mean()
     print(f'Average WER per file is {average_wer}')
