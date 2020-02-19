@@ -21,7 +21,7 @@ import Levenshtein
 
 
 
-def wrap(txt, cls=None, weight='', filename='', edit_tag='', word_start_index=''):
+def wrap(txt, cls=None, weight='', filename='', edit_tag='', word_start_index='', **kwargs):
     # return txt+' '
     if cls is not None:
         return f'<span class="{cls}" title="{cls}" data-weight="{weight}" data-call-id="{filename}" data-edit="{edit_tag}" data-word-start-index="{word_start_index}" >{txt}</span>'
