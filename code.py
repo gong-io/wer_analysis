@@ -828,7 +828,7 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output):
     print(f'Total WER is {df_edit_counts_wer}')
 
     average_wer = get_pivot_table_of_edits(df, groupby=['filename'])['wer'].mean()
-    print(f'Average WER is {average_wer}')
+    print(f'Average WER per file is {average_wer}')
 
     filenames = df['filename'].unique()
     df_calls_metadata = get_calls_metadata(filenames)
