@@ -599,6 +599,13 @@ def get_edit_distance_verbosely(ref_lst, hyp_lst):
     return nom, den, opcodes
 
 def get_edit_distance_kaldi(ref_lst, hyp_lst):
+    '''
+    This function is an implementation of the WER code in Kaldi, that attempts to be an exact copy.
+    It is slow and inefficient, and is not recommended for use.
+    :param ref_lst:
+    :param hyp_lst:
+    :return:
+    '''
     alphabet = set(ref_lst + hyp_lst)
     word2char = {k: chr(i) for i, k in enumerate(alphabet)}
     ref = ''.join([word2char[w] for w in ref_lst])
@@ -706,8 +713,7 @@ def generate_file_contents(ref_path, hyp_path, norm_func, limit=None):
 def get_edit_df(REF_PATH, HYP_PATH, norm_func=simple_norm, limit=None):
     full_compare = []
     for fn, ref_lst, hyp_lst in generate_file_contents(REF_PATH, HYP_PATH, norm_func, limit):
-        # dist, length, ops = get_edit_distance_verbosely(ref_lst, hyp_lst)
-        dist, length, ops = get_edit_distance_kaldi(ref_lst, hyp_lst)
+        dist, length, ops = get_edit_distance_verbosely(ref_lst, hyp_lst)
         full_compare.extend(
             [[fn, ' '.join(ref_lst[x[1]:x[2]]), ' '.join(hyp_lst[x[3]:x[4]]), x[2]-x[1] or x[4]-x[3], *x] for x in ops])
 
