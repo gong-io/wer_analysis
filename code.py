@@ -840,7 +840,11 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output):
     wer_by_conferencing_provider = wer_by_filename_with_metadata.groupby('conferencing_provider')['wer'].mean()
     save_to_s3( wer_by_conferencing_provider, s3_filename=folder_output+'/wer_by_conferencing_provider.tsv')
 
-    wer_by_field = lambda x: wer_by_filename_with_metadata.groupby(x)['wer'].describe().sort_values('mean')
+    def wer_by_field(x):
+        if wer_by_filename_with_metadata[x].nunique()>0:
+            return wer_by_filename_with_metadata.groupby(x)['wer'].describe().sort_values('mean')
+        else:
+            return None
 
     print('\n=== WER by company: ===')
     print( wer_by_field('company_name') )
