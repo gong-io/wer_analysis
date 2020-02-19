@@ -694,8 +694,11 @@ def remove_punctuation(text):
 
 def generate_file_contents(ref_path, hyp_path, norm_func, limit=None):
     counter = 0
-    ref_fnames = {f.split('.')[0].replace('-test50', ''): f for f in os.listdir(ref_path) if f[0].isdigit()}
-    hyp_fnames = {f.split('.')[0].replace('-test50', ''): f for f in os.listdir(hyp_path) if f[0].isdigit()}
+    def transform_filename(filename):
+        return filename.split('.')[0].replace('-test50', '')
+
+    ref_fnames = {transform_filename(f): f for f in os.listdir(ref_path) if f[0].isdigit()}
+    hyp_fnames = {transform_filename(f): f for f in os.listdir(hyp_path) if f[0].isdigit()}
 
     for fn in ref_fnames:
         if isinstance(limit, int) and counter >= limit:
