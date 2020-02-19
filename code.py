@@ -21,11 +21,13 @@ import Levenshtein
 
 
 
-def wrap(txt, cls=None):
+def wrap(txt, cls=None, **kwargs):
     # return txt+' '
     if cls is not None:
-        return '<span class="{cls}" title="{cls}">{txt}</span>'.format(cls=cls, txt=txt)
+        return f'<span class="{cls}" title="{cls}" data-weight="{weight}" data-call-id="{filename}" data-edit="{edit_tag}" data-word-start-index="{word_start_index}" >{txt}</span>'
+        # return '<span class="{cls}" title="{cls}">{txt}</span>'.format(cls=cls, txt=txt)
     return txt
+
 
 def get_css():
     result = """
@@ -76,7 +78,7 @@ def get_html_of_edits(df):
         elif r['edit_tag'] == 'replace':
             txt = wrap(r['text_reference'], 'delete')
             txt += wrap(r['text_hypothesis'], 'insert')
-        s_joined += wrap(txt, 'block') + ' '
+        s_joined += wrap(txt, 'block', r) + ' '
 
     return s_joined
 
@@ -131,7 +133,8 @@ def parse_monologues_to_word_dicts(monologues):
                     else:
                         continue
                 if word.get('duration', None) is None:
-                    word['duration'] = float(word['end']) - float(word['start'])
+                    if word.get('start') is not None and word.get('end') is not None:
+                        word['duration'] = float(word['end']) - float(word['start'])
                 word['text'] = word['text'].replace(' ', '%^%^%^%').strip()
                 word.update(extra_data)
                 result.append(word)
@@ -765,12 +768,9 @@ def get_pivot_table_of_edits(df, groupby=['filename']):
     _ = df.groupby(groupby + ['edit_tag'])['weight'].sum()
     # filenames = [z for z in _.index.levels[0]]
     # Create a pivot table of edit tags by filename
-    df_edit_counts = _.reset_index().pivot_table(values='weight', index='filename', columns='edit_tag').fillna(0)
-    df_edit_counts['edits'] = df_edit_counts.get('insert', 0) + df_edit_counts.get('delete', 0) + df_edit_counts.get(
-        'replace', 0)
-    df_edit_counts['denominator'] = df_edit_counts.get('equal', 0) + df_edit_counts.get('delete',
-                                                                                        0) + df_edit_counts.get(
-        'replace', 0) - 1
+    df_edit_counts = _.reset_index().pivot_table(values='weight', index=groupby, columns='edit_tag').fillna(0)
+    df_edit_counts['edits'] = df_edit_counts.get('insert', 0) + df_edit_counts.get('delete', 0) + df_edit_counts.get('replace', 0)
+    df_edit_counts['denominator'] = df_edit_counts.get('equal', 0) + df_edit_counts.get('delete',0) + df_edit_counts.get('replace', 0) - 1
     df_edit_counts['wer'] = df_edit_counts['edits'] / df_edit_counts['denominator'] * 100
     return df_edit_counts
 
@@ -838,6 +838,9 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output):
     save_to_s3( wer_by_conferencing_provider, s3_filename=folder_output+'/wer_by_conferencing_provider.tsv')
 
     wer_by_field = lambda x: wer_by_filename_with_metadata.groupby(x)['wer'].describe().sort_values('mean')
+
+    print('\n=== WER by company: ===')
+    print( wer_by_field('company_name') )
 
     print('\n=== WER by language: ===')
     print( wer_by_field('language') )
