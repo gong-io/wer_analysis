@@ -21,7 +21,7 @@ import Levenshtein
 
 
 
-def wrap(txt, cls=None, **kwargs):
+def wrap(txt, cls=None, weight='', filename='', edit_tag='', word_start_index=''):
     # return txt+' '
     if cls is not None:
         return f'<span class="{cls}" title="{cls}" data-weight="{weight}" data-call-id="{filename}" data-edit="{edit_tag}" data-word-start-index="{word_start_index}" >{txt}</span>'
@@ -78,7 +78,7 @@ def get_html_of_edits(df):
         elif r['edit_tag'] == 'replace':
             txt = wrap(r['text_reference'], 'delete')
             txt += wrap(r['text_hypothesis'], 'insert')
-        s_joined += wrap(txt, 'block', r) + ' '
+        s_joined += wrap(txt, 'block', **r.to_dict()) + ' '
 
     return s_joined
 
