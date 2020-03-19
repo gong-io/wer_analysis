@@ -688,6 +688,7 @@ def generate_file_contents(ref_path, hyp_path, norm_func, limit=None):
 
     ref_fnames = {transform_filename(f): f for f in os.listdir(ref_path) if f[0].isdigit()}
     hyp_fnames = {transform_filename(f): f for f in os.listdir(hyp_path) if f[0].isdigit()}
+    print(f'!!!! Found {len(ref_fnames)} files in the ref folder and {len(hyp_fnames)} files in the hypothesis folder.')
 
     for fn in ref_fnames:
         if isinstance(limit, int) and counter >= limit:
@@ -710,6 +711,32 @@ def generate_file_contents(ref_path, hyp_path, norm_func, limit=None):
         yield fn, ref_lst, hyp_lst
 
 
+def normalize_text(txt):
+    import nltk
+    ps = nltk.stem.PorterStemmer()
+    result = " ".join([ps.stem(w) for w in txt.replace('.','').replace('?','').replace(',','').split()])
+    return result
+
+
+def compute_effective_wer(row):
+    FULL_COST = 10000
+    MINIMAL_COST = 1
+    if row['edit_tag'] == 'equal':
+        return 0
+    if row['edit_tag'] == 'insert':
+        return FULL_COST
+    if row['edit_tag'] == 'delete':
+        return FULL_COST
+    if row['edit_tag'] == 'replace':
+        normalized_text_ref = normalize_text(row['text_reference'])
+        normalized_text_hyp = normalize_text(row['text_hypothesis'])
+        if normalized_text_ref == normalized_text_hyp:
+            return MINIMAL_COST
+        else:
+            return FULL_COST
+        pass
+    raise ValueError
+
 def get_edit_df(REF_PATH, HYP_PATH, norm_func=simple_norm, limit=None):
     full_compare = []
     for fn, ref_lst, hyp_lst in generate_file_contents(REF_PATH, HYP_PATH, norm_func, limit):
@@ -720,6 +747,8 @@ def get_edit_df(REF_PATH, HYP_PATH, norm_func=simple_norm, limit=None):
     df = pd.DataFrame(full_compare,
                       columns=['filename', 'text_reference', 'text_hypothesis', 'weight', 'edit_tag',
                                'text_reference_beg', 'text_reference_end','text_hypothesis_beg', 'text_hypothesis_end'])
+
+    df['effective_weight'] = df.apply(compute_effective_wer)
     return df
 
 
@@ -744,9 +773,15 @@ def save_to_s3(data, s3_filename, format=None):
         else:
             data = data.to_html()
 
-    s3 = s3fs.S3FileSystem(anon=False)
-    with s3.open(s3_filename, 'wb') as f:
-        f.write(data.encode())
+    if s3_filename[:5]=='s3://':
+        s3 = s3fs.S3FileSystem(anon=False)
+        with s3.open(s3_filename, 'wb') as f:
+            f.write(data.encode())
+    else:
+        os.makedirs(os.path.dirname(s3_filename), exist_ok=True)
+        with open(s3_filename, 'wb') as f:
+            f.write(data.encode())
+
     return data
 
 
@@ -876,3 +911,43 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output):
     save_to_s3(transcription_edits_with_metadata, s3_filename=folder_output+'/transcription_edits_with_metadata.csv')
 
     return transcription_edits_with_metadata
+
+def main():
+    REF_PATH = r'C:\data\wer\zoominfo_wer\rev\parsed'
+    HYP_PATH = r'C:\data\wer\zoominfo_wer\other_tool\parsed'
+    folder_output = r'C:\data\wer\zoominfo_wer\rev_other_tool_output'
+
+    REF_PATH = r'C:\data\wer\zoominfo_wer\rev\parsed'
+    HYP_PATH = r'C:\data\wer\zoominfo_wer\gong'
+    folder_output = r'C:\data\wer\zoominfo_wer\rev_gong_output'
+
+    REF_PATH = r'C:\data\wer\zoominfo_wer\gong'
+    HYP_PATH = r'C:\data\wer\zoominfo_wer\other_tool\parsed'
+    folder_output = r'C:\data\wer\zoominfo_wer\gong_other_tool_output'
+
+    df = get_edit_df(REF_PATH, HYP_PATH, norm_func=simple_norm, limit=None)
+    df['filename'] = df['filename'].astype(str)     # TODO: check if filename is really int !!!
+    print(f'Found {df.shape[0]} differences in {df["filename"].nunique()} files.')
+    df['common_value'] = 1
+
+    df_edit_counts_edits = get_pivot_table_of_edits(df, groupby=['common_value']).iloc[0]
+    print(f"Total WER is {df_edit_counts_edits.wer} ({df_edit_counts_edits['equal']} equal, {df_edit_counts_edits['insert']} insert, {df_edit_counts_edits['replace']} replace, {df_edit_counts_edits['delete']} delete)")
+
+    average_wer = get_pivot_table_of_edits(df, groupby=['filename'])['wer'].mean()
+    print(f'Average WER per file is {average_wer}')
+
+    print('Saving HTML of transcription differences...')
+    # Save HTML of edits
+    for filename in df['filename'].unique():
+        save_transcript_compare_html_to_s3(df[df.filename == filename], s3_filename=folder_output+f'/transcription_edits_{filename}.html')
+
+    # Top edits
+    save_to_s3(get_top_errors(df), s3_filename=folder_output + '/top_edits.tsv')
+    # Top errors
+    save_to_s3(get_top_errors(df, groupby=['text_reference']), s3_filename=folder_output+'/top_errors.tsv')
+
+    save_to_s3(df, s3_filename=folder_output+'/transcription_edits.csv')
+
+
+if __name__ == '__main__':
+    main()
