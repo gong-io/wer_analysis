@@ -13,6 +13,12 @@ from pyathena import connect
 import copy
 import datetime
 
+import nltk
+from nltk.corpus import stopwords
+
+ps = nltk.stem.PorterStemmer()
+stopwords_set = set(stopwords.words('english'))
+
 from IPython.core.display import display, HTML
 import Levenshtein
 
@@ -712,9 +718,8 @@ def generate_file_contents(ref_path, hyp_path, norm_func, limit=None):
 
 
 def normalize_text(txt):
-    import nltk
-    ps = nltk.stem.PorterStemmer()
-    result = " ".join([ps.stem(w) for w in txt.replace('.','').replace('?','').replace(',','').split()])
+    txt_list = [w for w in txt.replace('.','').replace('?','').replace(',','').split() if w not in stopwords_set]
+    result = " ".join([ps.stem(w) for w in txt_list])
     return result
 
 
@@ -951,3 +956,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    # print( normalize_text("I'm trying to view the views we've imported") )
