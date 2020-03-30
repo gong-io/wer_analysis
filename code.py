@@ -763,7 +763,7 @@ def get_edit_df(REF_PATH, HYP_PATH, norm_func=simple_norm, limit=None):
                       columns=['filename', 'text_reference', 'text_hypothesis', 'weight', 'edit_tag',
                                'text_reference_beg', 'text_reference_end','text_hypothesis_beg', 'text_hypothesis_end'])
 
-    df['effective_weight'] = df.apply(compute_effective_wer)
+    df['effective_weight'] = df.apply(compute_effective_wer, axis=1)
     return df
 
 
