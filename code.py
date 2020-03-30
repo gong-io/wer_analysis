@@ -77,16 +77,21 @@ def print_css():
 def get_html_of_edits(df):
     s_joined = ''
     for i, r in df.iterrows():
-        if r['edit_tag'] == 'equal':
-            txt = r['text_reference']
-        elif r['edit_tag'] == 'delete':
-            txt = wrap(r['text_reference'], 'delete')
-        elif r['edit_tag'] == 'insert':
-            txt = wrap(r['text_hypothesis'], 'insert')
-        elif r['edit_tag'] == 'replace':
-            txt = wrap(r['text_reference'], 'delete')
-            txt += wrap(r['text_hypothesis'], 'insert')
-        s_joined += wrap(txt, 'block', **r.to_dict()) + ' '
+        try:
+            if r['edit_tag'] == 'equal':
+                txt = r['text_reference']
+            elif r['edit_tag'] == 'delete':
+                txt = wrap(r['text_reference'], 'delete')
+            elif r['edit_tag'] == 'insert':
+                txt = wrap(r['text_hypothesis'], 'insert')
+            elif r['edit_tag'] == 'replace':
+                txt = wrap(r['text_reference'], 'delete')
+                txt += wrap(r['text_hypothesis'], 'insert')
+            s_joined += wrap(txt, 'block', **r.to_dict()) + ' '
+
+        except Exception as e:
+            print(i, r)
+            raise(e)
 
     return s_joined
 
