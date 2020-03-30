@@ -731,20 +731,25 @@ def normalize_text(txt):
 def compute_effective_wer(row):
     FULL_COST = 10000
     MINIMAL_COST = 1
-    if row['edit_tag'] == 'equal':
-        return 0
-    if row['edit_tag'] == 'insert':
-        return FULL_COST
-    if row['edit_tag'] == 'delete':
-        return FULL_COST
-    if row['edit_tag'] == 'replace':
-        normalized_text_ref = normalize_text(row['text_reference'])
-        normalized_text_hyp = normalize_text(row['text_hypothesis'])
-        if normalized_text_ref == normalized_text_hyp:
-            return MINIMAL_COST
-        else:
+    try:
+        if row['edit_tag'] == 'equal':
+            return 0
+        if row['edit_tag'] == 'insert':
             return FULL_COST
-        pass
+        if row['edit_tag'] == 'delete':
+            return FULL_COST
+        if row['edit_tag'] == 'replace':
+            normalized_text_ref = normalize_text(row['text_reference'])
+            normalized_text_hyp = normalize_text(row['text_hypothesis'])
+            if normalized_text_ref == normalized_text_hyp:
+                return MINIMAL_COST
+            else:
+                return FULL_COST
+            pass
+    except Exception as e:
+        print(row)
+        raise(e)
+
     raise ValueError
 
 def get_edit_df(REF_PATH, HYP_PATH, norm_func=simple_norm, limit=None):
