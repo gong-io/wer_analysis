@@ -504,8 +504,13 @@ def read_ctm(fname):
 
 def read_text(fname):
     ref_text = ''
-    with open(fname, encoding='utf-8') as fin:
-        ref_text = fin.read()
+    try:
+        with open(fname, encoding='utf-8') as fin:
+            ref_text = fin.read()
+    except UnicodeDecodeError as e:
+        print(f'Cannot read file {fname} using utf-8 encoding. Trying with latin-1 encoding...')
+        with open(fname, encoding='latin-1') as fin:
+            ref_text = fin.read()
     return ref_text
 
 
