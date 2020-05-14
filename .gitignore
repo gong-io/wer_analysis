@@ -1,0 +1,12 @@
+venv
+*.pyc
+.idea
+.idea/**/*
+.vscode/**/*
+.ipynb_checkpoints
+# *.csv
+*.wav
+*.mp3
+_not_in_git
+test-reports
+gong-output
