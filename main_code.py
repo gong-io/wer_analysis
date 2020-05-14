@@ -209,7 +209,7 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output, preproce
     print('Computing transcription differences...')
     REF_PATH = './data/truth'
     HYP_PATH = './data/hypothesis'
-    df = get_edit_df(REF_PATH, HYP_PATH, norm_func=preprocessing_normalization_func, limit=None)
+    df = get_edit_df(REF_PATH, HYP_PATH, preprocessing_normalization_func=preprocessing_normalization_func, ewer_normalization_func=ewer_normalization_func, limit=None)
     df['filename'] = df['filename'].astype(int)     # TODO: check if filename is really int !!!
     print(f'Found {df.shape[0]} differences in {df["filename"].nunique()} files.')
     df['common_value'] = 1
