@@ -1,6 +1,9 @@
 import os
 import numpy as np
 import json
+import pandas as pd
+from zipfile import ZipFile
+
 
 def generate_file_contents(ref_path, hyp_path, norm_func, limit=None):
     counter = 0
@@ -430,6 +433,10 @@ class TimedWords:
     def set(self, index, key, value):
         self.words[index].set(key, value)
 
+    def __str__(self):
+        from datetime import datetime
+        for monolog in self.sentences_by_monolog:
+            print(f"{datetime.timedelta(seconds=monolog['start'])}\t{monolog['speaker']}: \n{monolog['text']}\n")
 
 def read_ctm(fname):
     ctm = np.loadtxt(fname, str)
@@ -456,3 +463,10 @@ def read_file(fname):
     else:
         raise ValueError('Unexpected file format')
     return func(fname)
+
+
+if __name__=='__main__':
+    x = r'C:\data\wer\confidence\hyp\153923516977231343_out.json'
+    x = TimedWords().from_json_file(x)
+    print(x)
+    z = 1

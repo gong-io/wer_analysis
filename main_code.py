@@ -1,7 +1,4 @@
 import subprocess
-import shutil
-import pandas as pd
-from zipfile import ZipFile
 from collections import Counter
 import s3fs
 from pyathena import connect
@@ -164,7 +161,7 @@ def get_edit_df(REF_PATH, HYP_PATH, preprocessing_normalization_func=preprocessi
 
     import functools
     partial_func = functools.partial(compute_effective_wer, ewer_normalization_func)
-    df['effective_weight'] = df.apply(partial_func, axis=1)
+    # df['effective_weight'] = df.apply(partial_func, axis=1)
     return df
 
 def get_pivot_table_of_edits(df, groupby=['filename']):
@@ -293,7 +290,11 @@ def main():
 
     REF_PATH = r'C:\data\wer\confidence\ref\15-human-transcriptions-normalized'
     HYP_PATH = r'C:\data\wer\confidence\hyp'
-    folder_output = r'C:\data\wer\confidence\output'
+    folder_output = r'C:\data\wer\confidence\wer_results'
+
+    # REF_PATH = r'C:\data\wer\german\ref'
+    # HYP_PATH = r'C:\data\wer\german\hyp'
+    # folder_output = r'C:\data\wer\german\wer_results'
 
     df = get_edit_df(REF_PATH, HYP_PATH, preprocessing_normalization_func=preprocessing_normalization_func, ewer_normalization_func=ewer_normalization_func, limit=None)
     df['filename'] = df['filename'].astype(str)     # TODO: check if filename is really int !!!
