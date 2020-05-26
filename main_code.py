@@ -227,7 +227,7 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output, preproce
         df_calls_metadata['speaker_count_outside_company'] + df_calls_metadata['speaker_count_company_unknown']
     df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_total'].fillna(0)
 
-    wer_by_filename_with_metadata = pd.merge(left=get_pivot_table_of_edits(df), right=df_calls_metadata, left_on='filename', right_on='call_id')
+    wer_by_filename_with_metadata = pd.merge(left=get_pivot_table_of_edits(df), right=df_calls_metadata, left_on='filename', right_on='call_id', how='left')
     save_to_s3(wer_by_filename_with_metadata, s3_filename=folder_output+'/wer_by_filename_with_metadata.csv')
 
     wer_by_company = wer_by_filename_with_metadata.groupby('company_name')['wer'].mean()
