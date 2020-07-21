@@ -446,7 +446,7 @@ def read_ctm(fname):
 
 def read_text(fname):
     ref_text = ''
-    with open(fname) as fin:
+    with open(fname, encoding='utf-8') as fin:
         ref_text = fin.read()
     return ref_text
 
