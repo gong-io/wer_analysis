@@ -305,11 +305,12 @@ def run_md_eval(REF_PATH, HYP_PATH, OUT_PATH):
 
 def analyze_der_folders(folder_truth, folder_hypothesis, folder_output,
                         preprocessing_normalization_func=preprocessing_normalization_func,
-                        ewer_normalization_func=ewer_normalization_func):
-    print('Copying truth files...')
-    copy_s3_folder_to_local_folder(folder_truth, './diar_data/truth')
-    print('Copying hypothesis files...')
-    copy_s3_folder_to_local_folder(folder_hypothesis, './diar_data/hypothesis')
+                        ewer_normalization_func=ewer_normalization_func, move=True):
+    if move:
+        print('Copying truth files...')
+        copy_s3_folder_to_local_folder(folder_truth, './diar_data/truth')
+        print('Copying hypothesis files...')
+        copy_s3_folder_to_local_folder(folder_hypothesis, './diar_data/hypothesis')
 
     print('Computing diarization differences...')
     REF_PATH = 'diar_data/truth'
