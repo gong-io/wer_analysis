@@ -307,9 +307,9 @@ def analyze_der_folders(folder_truth, folder_hypothesis, folder_output,
                         preprocessing_normalization_func=preprocessing_normalization_func,
                         ewer_normalization_func=ewer_normalization_func):
     print('Copying truth files...')
-    copy_s3_folder_to_local_folder(folder_truth, './data/truth')
+    copy_s3_folder_to_local_folder(folder_truth, './diar_data/truth')
     print('Copying hypothesis files...')
-    copy_s3_folder_to_local_folder(folder_hypothesis, './data/hypothesis')
+    copy_s3_folder_to_local_folder(folder_hypothesis, './diar_data/hypothesis')
 
     print('Computing diarization differences...')
     REF_PATH = './diar_data/truth'
