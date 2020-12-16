@@ -32,7 +32,7 @@ else
         fa=$(grep -oP 'FALARM SPEAKER TIME.+\([ ]*\K[0-9]+([.][0-9]+)?'  $results/${filename}_threshold.txt)
         sp=$(grep -oP 'SPEAKER ERROR TIME.+\([ ]*\K[0-9]+([.][0-9]+)?'  $results/${filename}_threshold.txt)
 
-        echo "${filename},$der,$miss,$fa,$sp" >> sum.csv
+        echo "${filename},$der,$miss,$fa,$sp" >> $output/der_comparison.csv
 
         # Add to the sum of all the files
 
