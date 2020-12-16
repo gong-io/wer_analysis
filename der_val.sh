@@ -17,7 +17,7 @@ else
     spSum=0
 
     # Create an output for each file in the folders and a csv file containing each file's output as a line
-    echo "filename,DER,MISS,FA,SPKR" > sum.csv
+    echo "filename,DER,MISS,FA,SPKR" > $output/der_comparison.csv
 
     for file in v1/*.rttm; do
 
