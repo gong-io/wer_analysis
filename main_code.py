@@ -309,6 +309,7 @@ def add_der_metadata(df):
     df_calls_metadata['speaker_count_outside_company'] + df_calls_metadata['speaker_count_company_unknown']
     df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_total'].fillna(0)
 
+    return df_calls_metadata
     # wer_by_filename_with_metadata = pd.merge(left=get_pivot_table_of_edits(df), right=df_calls_metadata, left_on='filename', right_on='call_id', how='left')
     # save_to_s3(wer_by_filename_with_metadata, s3_filename=folder_output+'/wer_by_filename_with_metadata.csv')
     #
