@@ -298,8 +298,8 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output,
 
 
 def run_md_eval(REF_PATH, HYP_PATH, OUT_PATH):
-    script = "./der_val.sh {} {} {}".format(REF_PATH, HYP_PATH, OUT_PATH)
-    subprocess.check_output(script, shell=True)
+    process = subprocess.Popen(["der_val.sh", REF_PATH, HYP_PATH, OUT_PATH], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    process.wait()
     return pd.read_csv("{}/der_comparison.csv".format(OUT_PATH))
 
 
