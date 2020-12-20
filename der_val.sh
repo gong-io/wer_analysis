@@ -18,9 +18,9 @@ else
 
     # Create an output for each file in the folders and a csv file containing each file's output as a line
     echo "filename,DER,MISS,FA,SPKR" > $output/der_comparison.csv
-
+    echo "files" > log
     for file in v1/*.rttm; do
-
+        echo $file >> log
         filename=${file%.*}
         filename=${filename/v1\//}
         echo $filename
