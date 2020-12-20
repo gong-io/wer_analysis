@@ -240,9 +240,7 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output,
     df_calls_metadata = get_calls_metadata(filenames)
     df_calls_metadata['gong_link'] = [f'https://app.gong.io/call?id={call_id}' for call_id in
                                       df_calls_metadata['call_id']]
-    df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_in_company'] + \
-                                               df_calls_metadata['speaker_count_outside_company'] + df_calls_metadata[
-                                                   'speaker_count_company_unknown']
+    df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_in_company'] + df_calls_metadata['speaker_count_outside_company'] + df_calls_metadata['speaker_count_company_unknown']
     df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_total'].fillna(0)
 
     wer_by_filename_with_metadata = pd.merge(left=get_pivot_table_of_edits(df), right=df_calls_metadata,
@@ -297,67 +295,31 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output,
     return transcription_edits_with_metadata
 
 
-def add_der_metadata(df):
-    df['filename'] = df['filename'].astype(int)     # TODO: check if filename is really int !!!
+def der_metadata(df, folder_output):
+    df['filename'] = df['filename'].astype(int)  # TODO: check if filename is really int !!!
     print(f'Found {df.shape[0]} differences in {df["filename"].nunique()} files.')
-
 
     filenames = df['filename'].unique()
     df_calls_metadata = get_calls_metadata(filenames)
     df_calls_metadata['gong_link'] = [f'https://app.gong.io/call?id={call_id}' for call_id in df_calls_metadata['call_id']]
-    df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_in_company'] + \
-    df_calls_metadata['speaker_count_outside_company'] + df_calls_metadata['speaker_count_company_unknown']
+    df_calls_metadata['speaker_count_in_company'] = df_calls_metadata['speaker_count_in_company'].fillna(0)
+    df_calls_metadata['speaker_count_outside_company'] = df_calls_metadata['speaker_count_outside_company'].fillna(0)
+    df_calls_metadata['speaker_count_company_unknown'] = df_calls_metadata['speaker_count_company_unknown'].fillna(0)
+    df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_in_company'] + df_calls_metadata['speaker_count_outside_company'] + df_calls_metadata['speaker_count_company_unknown']
     df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_total'].fillna(0)
+    der_by_filename_with_metadata = pd.merge(left=df, right=df_calls_metadata, left_on='filename', right_on='call_id', how='left')
 
-    return df_calls_metadata
-    # wer_by_filename_with_metadata = pd.merge(left=get_pivot_table_of_edits(df), right=df_calls_metadata, left_on='filename', right_on='call_id', how='left')
-    # save_to_s3(wer_by_filename_with_metadata, s3_filename=folder_output+'/wer_by_filename_with_metadata.csv')
-    #
-    # wer_by_company = wer_by_filename_with_metadata.groupby('company_name')['wer'].mean()
-    # save_to_s3(wer_by_company, s3_filename=folder_output+'/wer_by_company.csv')
-    #
-    # wer_by_conferencing_provider = wer_by_filename_with_metadata.groupby('conferencing_provider')['wer'].mean()
-    # save_to_s3(wer_by_conferencing_provider, s3_filename=folder_output+'/wer_by_conferencing_provider.tsv')
-    #
-    # def wer_by_field(x):
-    #     if wer_by_filename_with_metadata[x].nunique()>0:
-    #         return wer_by_filename_with_metadata.groupby(x)['wer'].describe().sort_values('mean')
-    #     else:
-    #         return None
-    #
-    # print('\n=== WER by company: ===')
-    # print( wer_by_field('company_name') )
-    #
-    # print('\n=== WER by language: ===')
-    # print(wer_by_field('language'))
-    #
-    # print('\n=== WER by internal_meeting: ===')
-    # print(wer_by_field('internal_meeting'))
-    #
-    # print('\n=== WER by direction: ===')
-    # print(wer_by_field('direction'))
-    #
-    # print('\n=== WER by owner_name: ===')
-    # print(wer_by_field('owner_name'))
-    #
-    # print('\n=== WER by speaker_count_total: ===')
-    # print(wer_by_field('speaker_count_total'))
-    #
-    # print('Saving HTML of transcription differences...')
-    # # Save HTML of edits
-    # for filename in df['filename'].unique():
-    #     save_transcript_compare_html_to_s3(df[df.filename == filename], s3_filename=folder_output+f'/transcription_edits_{filename}.html')
-    #
-    # # Top edits
-    # save_to_s3(get_top_errors(df), s3_filename=folder_output + '/top_edits.tsv')
-    # # Top errors
-    # save_to_s3(get_top_errors(df, groupby=['text_reference']), s3_filename=folder_output+'/top_errors.tsv')
-    #
-    # transcription_edits_with_metadata = pd.merge(left=df, right=df_calls_metadata, left_on='filename', right_on='call_id')
-    # save_to_s3(transcription_edits_with_metadata, s3_filename=folder_output+'/transcription_edits_with_metadata.csv')
-    #
-    # return transcription_edits_with_metadata
+    # der_by_filename_with_metadata.append(
+    #     der_by_filename_with_metadata.sum(numeric_only=True).apply(lambda x: '%.2f' % x).rename("total"))
 
+    save_to_s3(der_by_filename_with_metadata, s3_filename=folder_output + '/der_by_filename_with_metadata.csv')
+    der_by_company = der_by_filename_with_metadata.groupby('company_name')['DER'].mean()
+    save_to_s3(der_by_company, s3_filename=folder_output + '/der_by_company.csv')
+
+    der_by_conferencing_provider = der_by_filename_with_metadata.groupby('conferencing_provider')['DER'].mean()
+    save_to_s3(der_by_conferencing_provider, s3_filename=folder_output + '/der_by_conferencing_provider.tsv')
+
+    return der_by_filename_with_metadata
 
 def main():
     REF_PATH = r'C:\data\wer\zoominfo_wer\rev\parsed'

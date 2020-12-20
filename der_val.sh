@@ -43,6 +43,6 @@ else
         fi
     done
 
-    echo "total,$derSum,$missSum,$faSum,$spSum" >> $results/der_comparison.csv
+    #echo "total,$derSum,$missSum,$faSum,$spSum" >> $results/der_comparison.csv
 fi
 
