@@ -318,7 +318,7 @@ def analyze_der_folders(folder_truth, folder_hypothesis, folder_output,
     HYP_PATH = './diar_data/hypothesis'
     OUT_PATH = './diar_data/output'
     df = run_md_eval(REF_PATH, HYP_PATH, OUT_PATH)
-    df['filename'] = df['filename'].astype(int)     # TODO: check if filename is really int !!!
+    # df['filename'] = df['filename'].astype(int)     # TODO: check if filename is really int !!!
     return df
     # print(f'Found {df.shape[0]} differences in {df["filename"].nunique()} files.')
     # df['common_value'] = 1

@@ -18,10 +18,12 @@ else
 
     # Create an output for each file in the folders and a csv file containing each file's output as a line
     echo "filename,DER,MISS,FA,SPKR" > $output/der_comparison.csv
+    echo "files" > test.log
     for file in v1/*.rttm; do
-        echo $file >> log
+        echo $file >> test.log
         filename=${file%.*}
         filename=${filename/v1\//}
+        echo $filename
 
         ./md-eval.pl -1 -c 0.25 -r $v1/$filename.rttm -s $v2/$filename.rttm 2 >  $results/${filename}_threshold.log > $results/${filename}_threshold.txt
 
