@@ -296,11 +296,10 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output,
 
 
 def der_metadata(df, folder_output):
-    df['filename'] = df['filename'].astype(int)  # TODO: check if filename is really int !!!
-    print(f'Found {df.shape[0]} differences in {df["filename"].nunique()} files.')
-
     filenames = df['filename'].unique()
+
     df_calls_metadata = get_calls_metadata(filenames)
+
     df_calls_metadata['gong_link'] = [f'https://app.gong.io/call?id={call_id}' for call_id in df_calls_metadata['call_id']]
     df_calls_metadata['speaker_count_in_company'] = df_calls_metadata['speaker_count_in_company'].fillna(0)
     df_calls_metadata['speaker_count_outside_company'] = df_calls_metadata['speaker_count_outside_company'].fillna(0)
