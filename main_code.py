@@ -309,7 +309,7 @@ def der_metadata(df, folder_output):
     der_by_filename_with_metadata = pd.merge(left=df, right=df_calls_metadata, left_on='filename', right_on='call_id', how='left')
 
     #   Add a total line
-    total = df.sum(numeric_only=True)
+    total = der_by_filename_with_metadata.sum(numeric_only=True)
     total["filename"] = "total"
     total["owner_id", "workspace_id", "call_id", "company_id", "topic_model_id"] = ""
     der_by_filename_with_metadata = der_by_filename_with_metadata.append(total, ignore_index=True)
