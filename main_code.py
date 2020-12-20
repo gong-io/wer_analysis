@@ -297,45 +297,18 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output,
     return transcription_edits_with_metadata
 
 
-def run_md_eval(ref_path, hyp_path, out_path):
-    process = subprocess.Popen(["der_val.sh", ref_path, hyp_path, out_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-    process.wait()
-    return
-    return pd.read_csv("{}/der_comparison.csv".format(out_path))
+def add_der_metadata(df):
+    df['filename'] = df['filename'].astype(int)     # TODO: check if filename is really int !!!
+    print(f'Found {df.shape[0]} differences in {df["filename"].nunique()} files.')
 
 
-def analyze_der_folders(folder_truth, folder_hypothesis, folder_output,
-                        preprocessing_normalization_func=preprocessing_normalization_func,
-                        ewer_normalization_func=ewer_normalization_func, move=True):
-    if move:
-        print('Copying truth files...')
-        copy_s3_folder_to_local_folder(folder_truth, './diar_data/truth')
-        print('Copying hypothesis files...')
-        copy_s3_folder_to_local_folder(folder_hypothesis, './diar_data/hypothesis')
+    filenames = df['filename'].unique()
+    df_calls_metadata = get_calls_metadata(filenames)
+    df_calls_metadata['gong_link'] = [f'https://app.gong.io/call?id={call_id}' for call_id in df_calls_metadata['call_id']]
+    df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_in_company'] + \
+    df_calls_metadata['speaker_count_outside_company'] + df_calls_metadata['speaker_count_company_unknown']
+    df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_total'].fillna(0)
 
-    print('Computing diarization differences...')
-    REF_PATH = './diar_data/truth'
-    HYP_PATH = './diar_data/hypothesis'
-    OUT_PATH = './diar_data/output'
-    df = run_md_eval(REF_PATH, HYP_PATH, OUT_PATH)
-    # df['filename'] = df['filename'].astype(int)     # TODO: check if filename is really int !!!
-    return df
-    # print(f'Found {df.shape[0]} differences in {df["filename"].nunique()} files.')
-    # df['common_value'] = 1
-    #
-    # df_edit_counts_edits = get_pivot_table_of_edits(df, groupby=['common_value']).iloc[0]
-    # print(f"Total WER is {df_edit_counts_edits.wer} ({df_edit_counts_edits['equal']} equal, {df_edit_counts_edits['insert']} insert, {df_edit_counts_edits['replace']} replace, {df_edit_counts_edits['delete']} delete)")
-    #
-    # average_wer = get_pivot_table_of_edits(df, groupby=['filename'])['wer'].mean()
-    # print(f'Average WER per file is {average_wer}')
-    #
-    # filenames = df['filename'].unique()
-    # df_calls_metadata = get_calls_metadata(filenames)
-    # df_calls_metadata['gong_link'] = [f'https://app.gong.io/call?id={call_id}' for call_id in df_calls_metadata['call_id']]
-    # df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_in_company'] + \
-    #     df_calls_metadata['speaker_count_outside_company'] + df_calls_metadata['speaker_count_company_unknown']
-    # df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_total'].fillna(0)
-    #
     # wer_by_filename_with_metadata = pd.merge(left=get_pivot_table_of_edits(df), right=df_calls_metadata, left_on='filename', right_on='call_id', how='left')
     # save_to_s3(wer_by_filename_with_metadata, s3_filename=folder_output+'/wer_by_filename_with_metadata.csv')
     #
