@@ -309,8 +309,11 @@ def der_metadata(df, folder_output):
     df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_total'].fillna(0)
     der_by_filename_with_metadata = pd.merge(left=df, right=df_calls_metadata, left_on='filename', right_on='call_id', how='left')
 
-    # der_by_filename_with_metadata.append(
-    #     der_by_filename_with_metadata.sum(numeric_only=True).apply(lambda x: '%.2f' % x).rename("total"))
+    #   Add a total line
+    total = df.sum(numeric_only=True)
+    total["filename"] = "total"
+    total["owner_id", "workspace_id", "call_id", "company_id", "topic_model_id"] = ""
+    der_by_filename_with_metadata = der_by_filename_with_metadata.append(total, ignore_index=True)
 
     save_to_s3(der_by_filename_with_metadata, s3_filename=folder_output + '/der_by_filename_with_metadata.csv')
     der_by_company = der_by_filename_with_metadata.groupby('company_name')['DER'].mean()
