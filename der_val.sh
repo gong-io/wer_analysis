@@ -22,7 +22,7 @@ else
         filename=${filename/$v1\//}
 #         echo $filename
 
-        if [ -e $v2/${filename}_out.rttm ]; then
+        if [ -e $v2/${filename}.rttm ]; then
             ./md-eval.pl -1 -c 0.25 -r $v1/$filename.rttm -s $v2/${filename}_out.rttm 2 >  $results/${filename}_threshold.log > $results/${filename}_threshold.txt
 
         der=$(grep -oP 'DIARIZATION\ ERROR\ =\ \K[0-9]+([.][0-9]+)?' $results/${filename}_threshold.txt)
