@@ -209,6 +209,49 @@ def get_calls_metadata(filenames):
     call_id IN ({})
     """.format(','.join([str(c) for c in filenames]))
     df_calls_metadata = pd.read_sql(athena_query, conn)
+
+    df_calls_metadata['gong_link'] = [f'https://app.gong.io/call?id={call_id}' for call_id in
+                                      df_calls_metadata['call_id']]
+    df_calls_metadata['speaker_count_in_company'] = df_calls_metadata['speaker_count_in_company'].fillna(0)
+    df_calls_metadata['speaker_count_outside_company'] = df_calls_metadata['speaker_count_outside_company'].fillna(0)
+    df_calls_metadata['speaker_count_company_unknown'] = df_calls_metadata['speaker_count_company_unknown'].fillna(0)
+    df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_in_company'] + df_calls_metadata[
+        'speaker_count_outside_company'] + df_calls_metadata['speaker_count_company_unknown']
+    df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_total'].fillna(0)
+
+    df_calls_metadata = df_calls_metadata[
+        ['call_id', 'call_duration', 'owner_id', 'company_id', 'company_name', 'direction', 'conferencing_provider',
+         'call_title', 'language', 'gong_link', 'update_date_time', 'create_date_time', 'week_number',
+         'week_start_date', 'call_status', 'is_customer_call', 'internal_meeting', 'trimmed_media_start_time',
+         'valid_call_structure', 'media_type', 'meeting_url', 'call_number_of_words', 'word_count_company',
+         'word_count_non_company', 'word_count_owner', 'word_count_unaffiliated_speakers',
+         'word_count_unlabeled_speech', 'highest_monologue_word_count_non_company', 'attendee_count_company',
+         'attendee_count_non_company', 'invitee_count_company', 'invitee_count_non_company',
+         'speaker_count_company_unknown', 'speaker_count_in_company', 'speaker_count_outside_company',
+         'speaker_count_total', 'time_spoken_company', 'time_spoken_non_company', 'time_spoken_owner',
+         'time_spoken_percent_company', 'time_spoken_percent_non_company', 'time_spoken_percent_owner',
+         'time_spoken_percent_unaffiliated_speakers', 'time_spoken_percent_unlabeled_speech', 'time_spoken_sec',
+         'time_spoken_unaffiliated_speakers', 'time_spoken_unlabeled_speech', 'longest_monologue_duration_non_company',
+         'longest_monologue_duration_owner', 'monologue_duration_median_non_company',
+         'monologue_duration_percentile_non_company', 'monologue_length_percent_non_company',
+         'monologue_word_count_median_non_company', 'monologue_word_count_percentile_non_company',
+         'question_count_company', 'question_count_non_company', 'question_count_owner',
+         'question_count_unaffiliated_speakers', 'question_count_unlabeled_speech',
+         'transition_pause_median_non_company', 'transition_pause_median_owner', 'transitions_per_hour_non_company',
+         'number_of_transitions_non_company', 'interactivity', 'next_call_of_opportunity', 'number_of_call_in_stage',
+         'crm_account_id', 'crm_account_industry', 'crm_account_name', 'crm_account_source', 'crm_account_type',
+         'crm_account_website', 'crm_lead_company_name', 'crm_lead_id', 'crm_lead_source',
+         'crm_lead_status_at_time_of_call', 'crm_lead_status_now', 'crm_opportunity_amount_at_time_of_call',
+         'crm_opportunity_amount_now', 'crm_opportunity_forecast_category_at_time_of_call',
+         'crm_opportunity_forecast_category_now', 'crm_opportunity_id', 'crm_opportunity_lead_source',
+         'crm_opportunity_name', 'crm_opportunity_probability_at_time_of_call', 'crm_opportunity_probability_now',
+         'crm_opportunity_stage_at_time_of_call', 'crm_opportunity_stage_now', 'crm_opportunity_type',
+         'call_screen_share_duration', 'app_screen_duration', 'app_screen_percent', 'browser_duration',
+         'browser_percent', 'presentation_duration', 'presentation_percent', 'webcam_duration',
+         'webcam_non_company_duration', 'webcam_owner_duration', 'webcam_percent', 'owner_email_address',
+         'owner_manager_email', 'owner_manager_manager_email', 'owner_manager_manager_name', 'owner_manager_name',
+         'owner_name', 'owner_title', 'topic_model_id', 'topic_model_name', 'workspace_id']]
+
     return df_calls_metadata
 
 
@@ -238,10 +281,6 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output,
 
     filenames = df['filename'].unique()
     df_calls_metadata = get_calls_metadata(filenames)
-    df_calls_metadata['gong_link'] = [f'https://app.gong.io/call?id={call_id}' for call_id in
-                                      df_calls_metadata['call_id']]
-    df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_in_company'] + df_calls_metadata['speaker_count_outside_company'] + df_calls_metadata['speaker_count_company_unknown']
-    df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_total'].fillna(0)
 
     wer_by_filename_with_metadata = pd.merge(left=get_pivot_table_of_edits(df), right=df_calls_metadata,
                                              left_on='filename', right_on='call_id', how='left')
@@ -300,13 +339,8 @@ def der_metadata(df, folder_output):
 
     df_calls_metadata = get_calls_metadata(filenames)
 
-    df_calls_metadata['gong_link'] = [f'https://app.gong.io/call?id={call_id}' for call_id in df_calls_metadata['call_id']]
-    df_calls_metadata['speaker_count_in_company'] = df_calls_metadata['speaker_count_in_company'].fillna(0)
-    df_calls_metadata['speaker_count_outside_company'] = df_calls_metadata['speaker_count_outside_company'].fillna(0)
-    df_calls_metadata['speaker_count_company_unknown'] = df_calls_metadata['speaker_count_company_unknown'].fillna(0)
-    df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_in_company'] + df_calls_metadata['speaker_count_outside_company'] + df_calls_metadata['speaker_count_company_unknown']
-    df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_total'].fillna(0)
-    der_by_filename_with_metadata = pd.merge(left=df, right=df_calls_metadata, left_on='filename', right_on='call_id', how='left')
+    der_by_filename_with_metadata = pd.merge(left=df, right=df_calls_metadata, left_on='filename', right_on='call_id',
+                                             how='left')
 
     #   Add a total line
     total = der_by_filename_with_metadata.sum(numeric_only=True)
@@ -322,6 +356,7 @@ def der_metadata(df, folder_output):
     save_to_s3(der_by_conferencing_provider, s3_filename=folder_output + '/der_by_conferencing_provider.tsv')
 
     return der_by_filename_with_metadata
+
 
 def main():
     REF_PATH = r'C:\data\wer\zoominfo_wer\rev\parsed'
