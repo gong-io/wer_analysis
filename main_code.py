@@ -219,7 +219,7 @@ def get_calls_metadata(filenames):
         'speaker_count_outside_company'] + df_calls_metadata['speaker_count_company_unknown']
     df_calls_metadata['speaker_count_total'] = df_calls_metadata['speaker_count_total'].fillna(0)
 
-    df_calls_metadata = df_calls_metadata[
+    df_calls_metadata_new = df_calls_metadata[
         ['call_id', 'call_duration', 'owner_id', 'company_id', 'company_name', 'direction', 'conferencing_provider',
          'call_title', 'language', 'gong_link', 'update_date_time', 'create_date_time', 'week_number',
          'week_start_date', 'call_status', 'is_customer_call', 'internal_meeting', 'trimmed_media_start_time',
@@ -251,8 +251,7 @@ def get_calls_metadata(filenames):
          'webcam_non_company_duration', 'webcam_owner_duration', 'webcam_percent', 'owner_email_address',
          'owner_manager_email', 'owner_manager_manager_email', 'owner_manager_manager_name', 'owner_manager_name',
          'owner_name', 'owner_title', 'topic_model_id', 'topic_model_name', 'workspace_id']]
-
-    return df_calls_metadata
+    return df_calls_metadata_new
 
 
 def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output,
