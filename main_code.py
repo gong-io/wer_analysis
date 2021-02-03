@@ -2,7 +2,7 @@ import subprocess
 from collections import Counter
 import s3fs
 from pyathena import connect
-import copyf
+import copy
 import datetime
 
 from preprocessing import *
