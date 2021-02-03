@@ -333,21 +333,20 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output,
     return transcription_edits_with_metadata
 
 
-def der_metadata(df, folder_output):
+def der_save_metadata(df, folder_output):
     filenames = df['filename'].unique()
 
     df_calls_metadata = get_calls_metadata(filenames)
 
     der_by_filename_with_metadata = pd.merge(left=df, right=df_calls_metadata, left_on='filename', right_on='call_id',
                                              how='left')
+    save_to_s3(der_by_filename_with_metadata, s3_filename=folder_output + '/der_by_filename_with_metadata.csv')
+    der_by_company = der_by_filename_with_metadata.groupby('company_name')['DER'].mean()
+    save_to_s3(der_by_company, s3_filename=folder_output + '/der_by_company.csv')
 
-#     save_to_s3(der_by_filename_with_metadata, s3_filename=folder_output + '/der_by_filename_with_metadata.csv')
-#     der_by_company = der_by_filename_with_metadata.groupby('company_name')['DER'].mean()
-#     save_to_s3(der_by_company, s3_filename=folder_output + '/der_by_company.csv')
-
-#     der_by_conferencing_provider = der_by_filename_with_metadata.groupby('conferencing_provider')['DER'].mean()
-#     save_to_s3(der_by_conferencing_provider, s3_filename=folder_output + '/der_by_conferencing_provider.tsv')
-
+    der_by_conferencing_provider = der_by_filename_with_metadata.groupby('conferencing_provider')['DER'].mean()
+    save_to_s3(der_by_conferencing_provider, s3_filename=folder_output + '/der_by_conferencing_provider.tsv')
+    
     return der_by_filename_with_metadata
 
 
