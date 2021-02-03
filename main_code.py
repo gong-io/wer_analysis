@@ -2,7 +2,7 @@ import subprocess
 from collections import Counter
 import s3fs
 from pyathena import connect
-import copy
+import copyf
 import datetime
 
 from preprocessing import *
@@ -341,12 +341,12 @@ def der_metadata(df, folder_output):
     der_by_filename_with_metadata = pd.merge(left=df, right=df_calls_metadata, left_on='filename', right_on='call_id',
                                              how='left')
 
-    save_to_s3(der_by_filename_with_metadata, s3_filename=folder_output + '/der_by_filename_with_metadata.csv')
-    der_by_company = der_by_filename_with_metadata.groupby('company_name')['DER'].mean()
-    save_to_s3(der_by_company, s3_filename=folder_output + '/der_by_company.csv')
+#     save_to_s3(der_by_filename_with_metadata, s3_filename=folder_output + '/der_by_filename_with_metadata.csv')
+#     der_by_company = der_by_filename_with_metadata.groupby('company_name')['DER'].mean()
+#     save_to_s3(der_by_company, s3_filename=folder_output + '/der_by_company.csv')
 
-    der_by_conferencing_provider = der_by_filename_with_metadata.groupby('conferencing_provider')['DER'].mean()
-    save_to_s3(der_by_conferencing_provider, s3_filename=folder_output + '/der_by_conferencing_provider.tsv')
+#     der_by_conferencing_provider = der_by_filename_with_metadata.groupby('conferencing_provider')['DER'].mean()
+#     save_to_s3(der_by_conferencing_provider, s3_filename=folder_output + '/der_by_conferencing_provider.tsv')
 
     return der_by_filename_with_metadata
 
