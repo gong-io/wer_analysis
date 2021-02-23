@@ -5,7 +5,7 @@ import pandas as pd
 from zipfile import ZipFile
 
 
-def generate_file_contents(ref_path, hyp_path, norm_func, limit=None):
+def generate_file_contents(ref_path, hyp_path, norm_func, limit=None, ignore_caps=False):
     counter = 0
     def transform_filename(filename):
         return filename.split('.')[0].replace('-test50', '')
@@ -26,8 +26,8 @@ def generate_file_contents(ref_path, hyp_path, norm_func, limit=None):
         hyp_text = read_file(hyp_path + os.sep + hyp_fnames[fn])
 
         if norm_func:
-            ref_text = norm_func(ref_text)
-            hyp_text = norm_func(hyp_text)
+            ref_text = norm_func(ref_text, ignore_caps)
+            hyp_text = norm_func(hyp_text, ignore_caps)
 
         ref_lst = ref_text.split()
         hyp_lst = hyp_text.split()

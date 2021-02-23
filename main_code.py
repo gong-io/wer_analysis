@@ -152,9 +152,9 @@ def compute_effective_wer(row, func_text_normalization):
 
 
 def get_edit_df(REF_PATH, HYP_PATH, preprocessing_normalization_func=preprocessing_normalization_func,
-                ewer_normalization_func=ewer_normalization_func, limit=None):
+                ewer_normalization_func=ewer_normalization_func, limit=None, ignore_caps=False):
     full_compare = []
-    for fn, ref_lst, hyp_lst in generate_file_contents(REF_PATH, HYP_PATH, preprocessing_normalization_func, limit):
+    for fn, ref_lst, hyp_lst in generate_file_contents(REF_PATH, HYP_PATH, preprocessing_normalization_func, limit, ignore_caps):
         dist, length, ops = get_edit_distance_verbosely(ref_lst, hyp_lst)
         full_compare.extend(
             [[fn, ' '.join(ref_lst[x[1]:x[2]]), ' '.join(hyp_lst[x[3]:x[4]]), x[2] - x[1] or x[4] - x[3], *x] for x in
@@ -256,7 +256,7 @@ def get_calls_metadata(filenames):
 
 def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output,
                         preprocessing_normalization_func=preprocessing_normalization_func,
-                        ewer_normalization_func=ewer_normalization_func):
+                        ewer_normalization_func=ewer_normalization_func, ignore_caps=False):
     print('Copying truth files...')
     copy_s3_folder_to_local_folder(folder_truth, './data/truth')
     print('Copying hypothesis files...')
@@ -266,7 +266,7 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output,
     REF_PATH = './data/truth'
     HYP_PATH = './data/hypothesis'
     df = get_edit_df(REF_PATH, HYP_PATH, preprocessing_normalization_func=preprocessing_normalization_func,
-                     ewer_normalization_func=ewer_normalization_func, limit=None)
+                     ewer_normalization_func=ewer_normalization_func, limit=None, ignore_caps=ignore_caps)
     df['filename'] = df['filename'].astype(int)  # TODO: check if filename is really int !!!
     print(f'Found {df.shape[0]} differences in {df["filename"].nunique()} files.')
     df['common_value'] = 1
