@@ -71,7 +71,7 @@ def preprocessing_normalization_func(text_in, ignore_caps=False):
         text_in = text_in.replace(k, v)
 
     # remove \u200b from text
-    text_in = text_in.strip(u'\u200b')
+    text_in = text_in.replace(u'\u200b','')
 
     return text_in
 
