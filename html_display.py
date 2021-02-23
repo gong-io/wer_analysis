@@ -21,7 +21,7 @@ def get_css():
         display: flex;
     }
     span.cap {
-        background: yellow;
+        background: blue;
         font-weight: bold;
         color: white;
         display: flex;
@@ -53,7 +53,22 @@ def get_html_of_edits(df):
             elif r['edit_tag'] == 'insert':
                 txt = wrap(r['text_hypothesis'], 'insert')
             elif r['edit_tag'] == 'replace':
-                if r['text_reference'].lower() == r['text_hypothesis'].lower():
+                if r['text_reference'].count(" ") == r['text_hypothesis'].count(" "):
+                    t_ref_split = r['text_reference'].split(" ")
+                    t_hyp_split = r['text_hypothesis'].split(" ")
+#                     print(t_ref_split, t_hyp_split)
+                    for j in range(len(t_ref_split)):
+                        if t_ref_split[j] == t_hyp_split[j]:
+                            txt = t_ref_split[j]
+                        elif t_ref_split[j].lower() == t_hyp_split[j].lower():
+                            txt = wrap(t_ref_split[j], 'cap')
+                            txt += wrap(t_hyp_split[j], 'cap')
+                        else:
+                            txt = wrap(t_ref_split[j], 'delete')
+                            txt += wrap(t_hyp_split[j], 'insert')
+                        s_joined += wrap(txt, 'block', **r.to_dict()) + ' '
+                    continue
+                elif r['text_reference'].lower() == r['text_hypothesis'].lower():
                     txt = wrap(r['text_reference'], 'cap')
                     txt += wrap(r['text_hypothesis'], 'cap')
                 else:
