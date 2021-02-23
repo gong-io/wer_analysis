@@ -21,7 +21,7 @@ def replace_umlaute(str):
         str = str.replace(k, v)
     return str
 
-def preprocessing_normalization_func(text_in):
+def preprocessing_normalization_func(text_in, ignore_caps=True):
     replacements = {
         '.': '',
         ',': '',
@@ -56,7 +56,8 @@ def preprocessing_normalization_func(text_in):
     for uhm in uhms:
         replacements[' '+uhm+' '] = ' '
 
-    text_in = text_in.lower() # lowercase
+    if ignore_caps:
+        text_in = text_in.lower() # lowercase
 
     # Remove annotations (e.g. "[laughter]"")
     text_in = re.sub("\[[a-zA-Z0-9]*\]", '', text_in)
