@@ -20,6 +20,12 @@ def get_css():
         color: white;
         display: flex;
     }
+    span.cap {
+        background: yellow;
+        font-weight: bold;
+        color: white;
+        display: flex;
+    }
     span.block {
         display: inline-block;
         margin-bottom: 2em;
@@ -47,8 +53,12 @@ def get_html_of_edits(df):
             elif r['edit_tag'] == 'insert':
                 txt = wrap(r['text_hypothesis'], 'insert')
             elif r['edit_tag'] == 'replace':
-                txt = wrap(r['text_reference'], 'delete')
-                txt += wrap(r['text_hypothesis'], 'insert')
+                if r['text_reference'].lower() == r['text_hypothesis'].lower():
+                    txt = wrap(r['text_reference'], 'cap')
+                    txt += wrap(r['text_hypothesis'], 'cap')
+                else:
+                    txt = wrap(r['text_reference'], 'delete')
+                    txt += wrap(r['text_hypothesis'], 'insert')
             s_joined += wrap(txt, 'block', **r.to_dict()) + ' '
 
         except Exception as e:
