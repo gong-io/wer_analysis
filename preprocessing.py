@@ -21,7 +21,7 @@ def replace_umlaute(str):
         str = str.replace(k, v)
     return str
 
-def preprocessing_normalization_func(text_in, ignore_caps=True):
+def preprocessing_normalization_func(text_in, ignore_caps=False):
     replacements = {
         '.': '',
         ',': '',
