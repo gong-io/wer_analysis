@@ -70,6 +70,9 @@ def preprocessing_normalization_func(text_in, ignore_caps=False):
     for k, v in replacements.items():
         text_in = text_in.replace(k, v)
 
+    # remove \u200b from text
+    text_in = text_in.strip(u'\u200b')
+
     return text_in
 
 def ewer_normalization_func(txt):
