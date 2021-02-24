@@ -6,6 +6,7 @@ from nltk.corpus import stopwords
 ps = nltk.stem.PorterStemmer()
 stopwords_set = set(stopwords.words('english'))
 
+
 def replace_umlaute(str):
     umlaut_map = {
         '\u00dc': 'UE',
@@ -17,16 +18,24 @@ def replace_umlaute(str):
         '\u00df': 'ss',
     }
 
-    for k,v in umlaut_map.items():
+    for k, v in umlaut_map.items():
         str = str.replace(k, v)
     return str
 
-def preprocessing_normalization_func(text_in, ignore_caps=False):
-    replacements = {
+
+def preprocessing_normalization_func(text_in, ignore_caps=True, hide_punc=True):
+    punc_rep = {
         '.': '',
         ',': '',
         '!': '',
-        '?': '',
+        '?': ''
+    }
+
+    replacements = {
+        #         '.': '',
+        #         ',': '',
+        #         '!': '',
+        #         '?': '',
         '…': '',
         ':': '',
         ';': '',
@@ -54,34 +63,43 @@ def preprocessing_normalization_func(text_in, ignore_caps=False):
     }
     uhms = ['uh', 'oh', 'em', 'um', 'ah', 'uhum', 'mmhmm', 'uhm', 'ahm', 'ähm', 'äh', 'ähmm', 'ähh']
     for uhm in uhms:
-        replacements[' '+uhm+' '] = ' '
-
-    if ignore_caps:
-        text_in = text_in.lower() # lowercase
+        replacements[' ' + uhm + ' '] = ' '
 
     # Remove annotations (e.g. "[laughter]"")
     text_in = re.sub("\[[a-zA-Z0-9]*\]", '', text_in)
 
     # Remove newline characters
     text_in = ' ' + text_in.replace('\r', ' ').replace('\n', ' ')
-    
+
     # text_in = ' ' + text_in
 
     for k, v in replacements.items():
         text_in = text_in.replace(k, v)
 
     # remove \u200b from text
-    text_in = text_in.replace(u'\u200b','')
+    text_in = text_in.replace(u'\u200b', '')
 
-    return text_in
+    text_in_punc = text_in
+    for k, v in punc_rep.items():
+        text_in = text_in.replace(k, v)
+
+    if ignore_caps:
+        text_in = text_in.lower()  # lowercase
+
+    if hide_punc:
+        return text_in
+    else:
+        return text_in, text_in_punc
+
 
 def ewer_normalization_func(txt):
-    txt = txt.replace('.','').replace('?','').replace(',','') # remove punctuation
-    txt = [' '.join(w) for w in txt.split() if w not in stopwords_set] # remove stopwords
+    txt = txt.replace('.', '').replace('?', '').replace(',', '')  # remove punctuation
+    txt = [' '.join(w) for w in txt.split() if w not in stopwords_set]  # remove stopwords
     txt = replace_umlaute(txt)
-    txt = ' '.join([ps.stem(w) for w in txt.split()]) # Apply stemming
+    txt = ' '.join([ps.stem(w) for w in txt.split()])  # Apply stemming
     txt = txt.replace(' ', '')
     return txt
+
 
 def remove_punctuation(text):
     """

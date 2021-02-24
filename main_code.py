@@ -152,22 +152,31 @@ def compute_effective_wer(row, func_text_normalization):
 
 
 def get_edit_df(REF_PATH, HYP_PATH, preprocessing_normalization_func=preprocessing_normalization_func,
-                ewer_normalization_func=ewer_normalization_func, limit=None, ignore_caps=False):
+                ewer_normalization_func=ewer_normalization_func, limit=None, ignore_caps=True, hide_punc=True):
     full_compare = []
-    for fn, ref_lst, hyp_lst in generate_file_contents(REF_PATH, HYP_PATH, preprocessing_normalization_func, limit, ignore_caps):
-        dist, length, ops = get_edit_distance_verbosely(ref_lst, hyp_lst)
-        full_compare.extend(
-            [[fn, ' '.join(ref_lst[x[1]:x[2]]), ' '.join(hyp_lst[x[3]:x[4]]), x[2] - x[1] or x[4] - x[3], *x] for x in
-             ops])
+    if hide_punc:
+        for fn, ref_lst, hyp_lst in generate_file_contents(REF_PATH, HYP_PATH, preprocessing_normalization_func, limit,
+                                                           ignore_caps, hide_punc):
+            dist, length, ops = get_edit_distance_verbosely(ref_lst, hyp_lst)
+            full_compare.extend(
+                [[fn, ' '.join(ref_lst[x[1]:x[2]]), ' '.join(hyp_lst[x[3]:x[4]]), x[2] - x[1] or x[4] - x[3], *x] for x
+                 in ops])
+    else:
+        for fn, ref_lst, hyp_lst in generate_file_contents(REF_PATH, HYP_PATH, preprocessing_normalization_func, limit,
+                                                           ignore_caps, hide_punc):
+            dist, length, ops = get_edit_distance_verbosely(ref_lst["ref_lst"], hyp_lst["hyp_lst"])
+            full_compare.extend([[fn, ' '.join(ref_lst["ref_punc_lst"][x[1]:x[2]]),
+                                  ' '.join(hyp_lst["hyp_punc_lst"][x[3]:x[4]]), x[2] - x[1] or x[4] - x[3], *x] for x in
+                                 ops])
 
     df = pd.DataFrame(full_compare,
                       columns=['filename', 'text_reference', 'text_hypothesis', 'weight', 'edit_tag',
                                'text_reference_beg', 'text_reference_end', 'text_hypothesis_beg',
                                'text_hypothesis_end'])
-
+    return df
     import functools
     partial_func = functools.partial(compute_effective_wer, ewer_normalization_func)
-    # df['effective_weight'] = df.apply(partial_func, axis=1)
+    #     df['effective_weight'] = df.apply(partial_func, axis=1)
     return df
 
 
@@ -256,7 +265,7 @@ def get_calls_metadata(filenames):
 
 def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output,
                         preprocessing_normalization_func=preprocessing_normalization_func,
-                        ewer_normalization_func=ewer_normalization_func, ignore_caps=False):
+                        ewer_normalization_func=ewer_normalization_func, ignore_caps=True, hide_punc=True):
     print('Copying truth files...')
     copy_s3_folder_to_local_folder(folder_truth, './data/truth')
     print('Copying hypothesis files...')
@@ -266,7 +275,7 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output,
     REF_PATH = './data/truth'
     HYP_PATH = './data/hypothesis'
     df = get_edit_df(REF_PATH, HYP_PATH, preprocessing_normalization_func=preprocessing_normalization_func,
-                     ewer_normalization_func=ewer_normalization_func, limit=None, ignore_caps=ignore_caps)
+                     ewer_normalization_func=ewer_normalization_func, limit=None, ignore_caps=ignore_caps, hide_punc=hide_punc)
     df['filename'] = df['filename'].astype(int)  # TODO: check if filename is really int !!!
     print(f'Found {df.shape[0]} differences in {df["filename"].nunique()} files.')
     df['common_value'] = 1
@@ -346,7 +355,7 @@ def der_save_metadata(df, folder_output):
 
     der_by_conferencing_provider = der_by_filename_with_metadata.groupby('conferencing_provider')['DER'].mean()
     save_to_s3(der_by_conferencing_provider, s3_filename=folder_output + '/der_by_conferencing_provider.tsv')
-    
+
     return der_by_filename_with_metadata
 
 

@@ -5,8 +5,9 @@ import pandas as pd
 from zipfile import ZipFile
 
 
-def generate_file_contents(ref_path, hyp_path, norm_func, limit=None, ignore_caps=False):
+def generate_file_contents(ref_path, hyp_path, norm_func, limit=None, ignore_caps=True, hide_punc=True):
     counter = 0
+
     def transform_filename(filename):
         return filename.split('.')[0].replace('-test50', '')
 
@@ -26,13 +27,28 @@ def generate_file_contents(ref_path, hyp_path, norm_func, limit=None, ignore_cap
         hyp_text = read_file(hyp_path + os.sep + hyp_fnames[fn])
 
         if norm_func:
-            ref_text = norm_func(ref_text, ignore_caps)
-            hyp_text = norm_func(hyp_text, ignore_caps)
+            if hide_punc:
+                ref_text = norm_func(ref_text, ignore_caps, hide_punc)
+                hyp_text = norm_func(hyp_text, ignore_caps, hide_punc)
+            else:
+                ref_text, ref_text_punc = norm_func(ref_text, ignore_caps, hide_punc)
+                hyp_text, hyp_text_punc = norm_func(hyp_text, ignore_caps, hide_punc)
 
         ref_lst = ref_text.split()
         hyp_lst = hyp_text.split()
-        counter += 1
-        yield fn, ref_lst, hyp_lst
+
+        if hide_punc:
+            counter += 1
+            yield fn, ref_lst, hyp_lst
+
+        else:
+            ref_punc_lst = ref_text_punc.split()
+            hyp_punc_lst = hyp_text_punc.split()
+
+            counter += 1
+            yield fn, {'ref_lst': ref_lst, 'ref_punc_lst': ref_punc_lst}, {'hyp_lst': hyp_lst,
+                                                                           'hyp_punc_lst': hyp_punc_lst}
+
 
 sentence_termination_marks = ['.', '?']
 TH_PAUSE = 1.5
@@ -68,14 +84,14 @@ def parse_monologues_to_word_dicts(monologues):
         if 'tokens' in monologue:
             for i, word in enumerate(monologue['tokens']):
                 word = {
-                    'start':        word['s'],
-                    'duration':     word['d'],
-                    'end':          word['s']+word['d'],
-                    'text':         word['t'],
-                    'type':         word.get('i', 'word')
+                    'start': word['s'],
+                    'duration': word['d'],
+                    'end': word['s'] + word['d'],
+                    'text': word['t'],
+                    'type': word.get('i', 'word')
                 }
-                if word.get('type', '')=='P':
-                    if i>0 and len(result)>0:
+                if word.get('type', '') == 'P':
+                    if i > 0 and len(result) > 0:
                         result[-1]['punctuation'] = word['text']
                         continue
                     else:
@@ -86,6 +102,7 @@ def parse_monologues_to_word_dicts(monologues):
 
     return result
 
+
 def terminate_sentence_func_sentence_termination_marks(word, sentence):
     result = \
         word['text'] in sentence_termination_marks \
@@ -95,6 +112,7 @@ def terminate_sentence_func_sentence_termination_marks(word, sentence):
 
     return result
 
+
 def terminate_sentence_func_sentence_termination_marks_in_punctuation_field(word, sentence):
     result = \
         word['punctuation'] in sentence_termination_marks \
@@ -102,6 +120,7 @@ def terminate_sentence_func_sentence_termination_marks_in_punctuation_field(word
         or word['paragraph_change']
 
     return result
+
 
 def terminate_sentence_func_pause(word, sentence):
     result = \
@@ -111,19 +130,20 @@ def terminate_sentence_func_pause(word, sentence):
 
     return result
 
-def enrich_words_json(words):
-    L = len(words)-1
 
-    for i,word in enumerate(words):
+def enrich_words_json(words):
+    L = len(words) - 1
+
+    for i, word in enumerate(words):
         # Pause
-        if i<L and word.get('start') is not None and word.get('end') is not None:
-            word['pause'] = float(words[i+1]['start']) - float(word['end'])
+        if i < L and word.get('start') is not None and word.get('end') is not None:
+            word['pause'] = float(words[i + 1]['start']) - float(word['end'])
         else:
             word['pause'] = np.nan
 
         # Speaker change
-        if i<L:
-            word['speaker_change'] = ( words[i+1].get('speaker_id',0) != word.get('speaker_id',0) )
+        if i < L:
+            word['speaker_change'] = (words[i + 1].get('speaker_id', 0) != word.get('speaker_id', 0))
         else:
             word['speaker_change'] = True
 
@@ -136,16 +156,19 @@ def enrich_words_json(words):
 
     return words
 
+
 def enrich_sentences_dict(sentences):
     for sentence in sentences:
-        if sentence['duration']>0:
+        if sentence['duration'] > 0:
             sentence['chars_per_second'] = len(sentence['text']) / sentence['duration']
         else:
             sentence['chars_per_second'] = np.nan
     return sentences
 
+
 def calc_words_stats(words, k, func):
     return func([word[k] for word in words])
+
 
 def group_timed_words_to_sentences(words, additional_data={}, terminate_sentence_func=None, return_words=False):
     """
@@ -175,13 +198,13 @@ def group_timed_words_to_sentences(words, additional_data={}, terminate_sentence
     # sentence_total_inner_pause = 0
     sentence_words = []
     sentence_id = 0
-    sentence_start_id = 0 # Number of word that starts the sentence
+    sentence_start_id = 0  # Number of word that starts the sentence
 
     if terminate_sentence_func is None:
         terminate_sentence_func = terminate_sentence_func_sentence_termination_marks
 
     for ind, word in enumerate(words):
-        if len(word['text'])==0:
+        if len(word['text']) == 0:
             continue
 
         # Ignore comments in text (e.g. "[inaudible]" )
@@ -194,7 +217,7 @@ def group_timed_words_to_sentences(words, additional_data={}, terminate_sentence
             sentence_start_id = ind
 
         text += word['text'] + word.get('punctuation', ' ')
-        if text[-1]!=' ':
+        if text[-1] != ' ':
             text += ' '
 
         if word['text'] in sentence_termination_marks:
@@ -233,7 +256,6 @@ def group_timed_words_to_sentences(words, additional_data={}, terminate_sentence
                 'speaker_id': word.get('speaker_id', '')
             }
 
-
             if return_words:
                 sentence_data['words'] = sentence_words
 
@@ -245,7 +267,7 @@ def group_timed_words_to_sentences(words, additional_data={}, terminate_sentence
             # sentence_total_inner_pause = 0
             sentence_words = []
             is_last_word_in_sentence = False
-            is_first_word_in_sentence = True # Next word will be the first in sentence
+            is_first_word_in_sentence = True  # Next word will be the first in sentence
         else:
             is_first_word_in_sentence = False
 
@@ -280,7 +302,7 @@ class TimedWords:
     def from_json_file(self, filename):
         if '.zip' in filename:
             parts = filename.split('.zip')
-            with ZipFile(parts[0]+'.zip') as f_zip:
+            with ZipFile(parts[0] + '.zip') as f_zip:
                 with f_zip.open(parts[1][1:], 'r', encoding='utf-8') as f:
                     data = json.load(f)
         else:
@@ -389,7 +411,7 @@ class TimedWords:
 
     def find_sentence_by_time(self, section_start_time, section_end_time=None):
         sentence_start_index = 0
-        sentence_end_index = self.length-1
+        sentence_end_index = self.length - 1
 
         if section_end_time is None:
             section_end_time = section_start_time
@@ -398,13 +420,13 @@ class TimedWords:
 
         for word in self.words[start_word['index']::-1]:
             if word['punctuation'] in ['.', '?']:
-                sentence_start_index = word['index']+1
+                sentence_start_index = word['index'] + 1
                 break
-        for word in self.words[end_word['index']-1:]:
+        for word in self.words[end_word['index'] - 1:]:
             if word['punctuation'] in ['.', '?']:
                 sentence_end_index = word['index']
                 break
-        return self.words[sentence_start_index:sentence_end_index+1]
+        return self.words[sentence_start_index:sentence_end_index + 1]
 
     def find(self, text):
         index_in_text = self.text.lower().find(text.lower())
@@ -413,9 +435,8 @@ class TimedWords:
             return num_word
         return None
 
-
         # TODO: Write function (currently it's not working)
-        text_list = text.strip().split() #.lower()
+        text_list = text.strip().split()  # .lower()
         current_counter = 0
         for word_ind, word in enumerate(self.words):
             ind = word_ind
@@ -438,6 +459,7 @@ class TimedWords:
         for monolog in self.sentences_by_monolog:
             print(f"{datetime.timedelta(seconds=monolog['start'])}\t{monolog['speaker']}: \n{monolog['text']}\n")
 
+
 def read_ctm(fname):
     ctm = np.loadtxt(fname, str)
     ctm = ctm[ctm[:, 2].argsort()]  # sort by time
@@ -453,7 +475,7 @@ def read_text(fname):
         print('Failed to read file with UTF-8 encoding. Attempting latin-1...')
         with open(fname, encoding='latin-1') as fin:
             ref_text = fin.read()
-                  
+
     return ref_text
 
 
@@ -471,7 +493,7 @@ def read_file(fname):
     return func(fname)
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     x = r'C:\data\wer\confidence\hyp\153923516977231343_out.json'
     x = TimedWords().from_json_file(x)
     print(x)
