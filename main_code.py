@@ -282,15 +282,15 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output,
 
     df_edit_counts_edits = get_pivot_table_of_edits(df, groupby=['common_value']).iloc[0]
     t = ""
-    if "wer" in df_edit_counts_edit: 
+    if "wer" in df_edit_counts_edits: 
           t += f"Total WER is {df_edit_counts_edits.wer}"
-    if "equal" in df_edit_counts_edit:
+    if "equal" in df_edit_counts_edits:
           t += f" {df_edit_counts_edits['equal']} equal,"
-    if "insert" in df_edit_counts_edit:
+    if "insert" in df_edit_counts_edits:
           t += f" {df_edit_counts_edits['insert']} insert,"
-    if "replace" in df_edit_counts_edit:
+    if "replace" in df_edit_counts_edits:
           t += f" {df_edit_counts_edits['replace']} replace,"
-    if "delete" in df_edit_counts_edit:
+    if "delete" in df_edit_counts_edits:
           t += f" {df_edit_counts_edits['delete']} delete,"
     print(t)
 
