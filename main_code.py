@@ -256,9 +256,9 @@ def get_calls_metadata(filenames):
          'crm_opportunity_name', 'crm_opportunity_probability_at_time_of_call', 'crm_opportunity_probability_now',
          'crm_opportunity_stage_at_time_of_call', 'crm_opportunity_stage_now', 'crm_opportunity_type',
          'call_screen_share_duration', 'app_screen_duration', 'app_screen_percent', 'browser_duration',
-         'browser_percent', 'presentation_duration', 'presentation_percent', 'webcam_duration',
-         'webcam_non_company_duration', 'webcam_owner_duration','webcam_percent', 'owner_email_address',
-         'owner_manager_email', 'owner_manager_manager_email', 'owner_manager_manager_name', 'owner_manager_name',
+         'browser_percent', 'presentation_duration', 'presentation_percent', 
+         # 'webcam_duration', 'webcam_non_company_duration', 'webcam_owner_duration','webcam_percent', 
+         'owner_email_address', 'owner_manager_email', 'owner_manager_manager_email', 'owner_manager_manager_name', 'owner_manager_name',
          'owner_name', 'owner_title', 'topic_model_id', 'topic_model_name', 'workspace_id']]
     return df_calls_metadata_new
 
