@@ -335,6 +335,10 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output,
         print('\n=== WER by speaker_count_total: ===')
         print(wer_by_field('speaker_count_total'))
 
+        transcription_edits_with_metadata = pd.merge(left=df, right=df_calls_metadata, left_on='filename',
+                                                     right_on='call_id')
+        save_to_s3(transcription_edits_with_metadata, s3_filename=folder_output + '/transcription_edits_with_metadata.csv')
+
     except Exception as e:
         print('\nError reading metadata. Skipping WER statistics per metadata metrics...')
         
@@ -348,10 +352,6 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output,
     save_to_s3(get_top_errors(df), s3_filename=folder_output + '/top_edits.tsv')
     # Top errors
     save_to_s3(get_top_errors(df, groupby=['text_reference']), s3_filename=folder_output + '/top_errors.tsv')
-
-    transcription_edits_with_metadata = pd.merge(left=df, right=df_calls_metadata, left_on='filename',
-                                                 right_on='call_id')
-    save_to_s3(transcription_edits_with_metadata, s3_filename=folder_output + '/transcription_edits_with_metadata.csv')
 
     return transcription_edits_with_metadata
 
