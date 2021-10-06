@@ -300,7 +300,8 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output,
     filenames = df['filename'].unique()
     try:
         df_calls_metadata = get_calls_metadata(filenames)
-
+        is_metadata_available = True
+        
         wer_by_filename_with_metadata = pd.merge(left=get_pivot_table_of_edits(df), right=df_calls_metadata,
                                                  left_on='filename', right_on='call_id', how='left')
         save_to_s3(wer_by_filename_with_metadata, s3_filename=folder_output + '/wer_by_filename_with_metadata.csv')
@@ -335,11 +336,8 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output,
         print('\n=== WER by speaker_count_total: ===')
         print(wer_by_field('speaker_count_total'))
 
-        transcription_edits_with_metadata = pd.merge(left=df, right=df_calls_metadata, left_on='filename',
-                                                     right_on='call_id')
-        save_to_s3(transcription_edits_with_metadata, s3_filename=folder_output + '/transcription_edits_with_metadata.csv')
-
     except Exception as e:
+        is_metadata_available = False
         print('\nError reading metadata. Skipping WER statistics per metadata metrics...')
         
     print('Saving HTML of transcription differences...')
@@ -353,7 +351,13 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output,
     # Top errors
     save_to_s3(get_top_errors(df, groupby=['text_reference']), s3_filename=folder_output + '/top_errors.tsv')
 
-    return transcription_edits_with_metadata
+    if is_metadata_available:
+        transcription_edits_with_metadata = pd.merge(left=df, right=df_calls_metadata, left_on='filename',
+                                                     right_on='call_id')
+        save_to_s3(transcription_edits_with_metadata, s3_filename=folder_output + '/transcription_edits_with_metadata.csv')
+        return transcription_edits_with_metadata
+    else:
+        return None
 
 
 def der_save_metadata(df, folder_output):
