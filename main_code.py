@@ -298,42 +298,46 @@ def analyze_wer_folders(folder_truth, folder_hypothesis, folder_output,
     print(f'Average WER per file is {average_wer}')
 
     filenames = df['filename'].unique()
-    df_calls_metadata = get_calls_metadata(filenames)
+    try:
+        df_calls_metadata = get_calls_metadata(filenames)
 
-    wer_by_filename_with_metadata = pd.merge(left=get_pivot_table_of_edits(df), right=df_calls_metadata,
-                                             left_on='filename', right_on='call_id', how='left')
-    save_to_s3(wer_by_filename_with_metadata, s3_filename=folder_output + '/wer_by_filename_with_metadata.csv')
+        wer_by_filename_with_metadata = pd.merge(left=get_pivot_table_of_edits(df), right=df_calls_metadata,
+                                                 left_on='filename', right_on='call_id', how='left')
+        save_to_s3(wer_by_filename_with_metadata, s3_filename=folder_output + '/wer_by_filename_with_metadata.csv')
 
-    wer_by_company = wer_by_filename_with_metadata.groupby('company_name')['wer'].mean()
-    save_to_s3(wer_by_company, s3_filename=folder_output + '/wer_by_company.csv')
+        wer_by_company = wer_by_filename_with_metadata.groupby('company_name')['wer'].mean()
+        save_to_s3(wer_by_company, s3_filename=folder_output + '/wer_by_company.csv')
 
-    wer_by_conferencing_provider = wer_by_filename_with_metadata.groupby('conferencing_provider')['wer'].mean()
-    save_to_s3(wer_by_conferencing_provider, s3_filename=folder_output + '/wer_by_conferencing_provider.tsv')
+        wer_by_conferencing_provider = wer_by_filename_with_metadata.groupby('conferencing_provider')['wer'].mean()
+        save_to_s3(wer_by_conferencing_provider, s3_filename=folder_output + '/wer_by_conferencing_provider.tsv')
 
-    def wer_by_field(x):
-        if wer_by_filename_with_metadata[x].nunique() > 0:
-            return wer_by_filename_with_metadata.groupby(x)['wer'].describe().sort_values('mean')
-        else:
-            return None
+        def wer_by_field(x):
+            if wer_by_filename_with_metadata[x].nunique() > 0:
+                return wer_by_filename_with_metadata.groupby(x)['wer'].describe().sort_values('mean')
+            else:
+                return None
 
-    print('\n=== WER by company: ===')
-    print(wer_by_field('company_name'))
+        print('\n=== WER by company: ===')
+        print(wer_by_field('company_name'))
 
-    print('\n=== WER by language: ===')
-    print(wer_by_field('language'))
+        print('\n=== WER by language: ===')
+        print(wer_by_field('language'))
 
-    print('\n=== WER by internal_meeting: ===')
-    print(wer_by_field('internal_meeting'))
+        print('\n=== WER by internal_meeting: ===')
+        print(wer_by_field('internal_meeting'))
 
-    print('\n=== WER by direction: ===')
-    print(wer_by_field('direction'))
+        print('\n=== WER by direction: ===')
+        print(wer_by_field('direction'))
 
-    print('\n=== WER by owner_name: ===')
-    print(wer_by_field('owner_name'))
+        print('\n=== WER by owner_name: ===')
+        print(wer_by_field('owner_name'))
 
-    print('\n=== WER by speaker_count_total: ===')
-    print(wer_by_field('speaker_count_total'))
+        print('\n=== WER by speaker_count_total: ===')
+        print(wer_by_field('speaker_count_total'))
 
+    except Exception as e:
+        print('\nError reading metadata. Skipping WER statistics per metadata metrics...')
+        
     print('Saving HTML of transcription differences...')
     # Save HTML of edits
     for filename in df['filename'].unique():
