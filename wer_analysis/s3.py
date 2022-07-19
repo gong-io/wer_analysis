@@ -2,7 +2,7 @@ import s3fs
 import os
 import shutil
 import pandas as pd
-from html_display import get_css, get_html_of_edits
+from .html_display import get_css, get_html_of_edits
 
 def save_to_s3(data, s3_filename, format=None):
     s3_filename = s3_filename.replace('//', '/').replace('s3:/', 's3://')

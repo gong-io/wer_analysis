@@ -1,14 +1,12 @@
 import subprocess
 from collections import Counter
-import s3fs
 from pyathena import connect
 import copy
 import datetime
 
-from preprocessing import *
-from read_data import *
-from s3 import *
-from html_display import *
+from .preprocessing import *
+from .read_data import *
+from .s3 import *
 
 import Levenshtein
 
